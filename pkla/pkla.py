@@ -242,6 +242,12 @@ def pkl_decode_intro(ctx):
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
         ctx.errorhandler.pos.set(pos+15)
     elif byte_seq_matches(ctx, pos,
+        b'\xb8??\xba??\x05\x00\x00\x3b\x2d\x73\x67\x72', 0x3f):
+        ctx.intro.segclass.set("megalite")
+        ctx.initial_key.set(getu16(ctx, pos+4))
+        ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
+        ctx.errorhandler.pos.set(pos+15)
+    elif byte_seq_matches(ctx, pos,
         b'\x50\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72?'
         b'\xb4\x09\xba??\xcd\x21\xb8\x01\x4c\xcd\x21', 0x3f):
         ctx.intro.segclass.set("1.50")
@@ -477,6 +483,12 @@ def pkl_decode_copier(ctx):
         ctx.copier.segclass.set('1.14normal')
         pos_of_decompr_pos_field = pos+18
     elif byte_seq_matches(ctx, pos,
+        b'\x2d\x20\x00\x8e\xd0\x2d??\x8e\xc0\x50\xb9??'
+        b'\x33\xff\x56\xbe', 0x3f):
+        found_copier = 1
+        ctx.copier.segclass.set('megalite')
+        pos_of_decompr_pos_field = pos+18
+    elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x90\x8e\xc0\x50\xb9??'
         b'\x33\xff\x57\xbe', 0x3f):
         found_copier = 1
@@ -575,7 +587,8 @@ def pkl_deduce_settings2(ctx):
         ctx.is_scrambled.set(False)
     elif ctx.intro.segclass.val=='1.20var5':
         ctx.is_scrambled.set(False)
-    elif ctx.copier.segclass.val=='1.14normal':
+    elif ctx.copier.segclass.val=='1.14normal' or \
+        ctx.intro.segclass.val=='megalite':
         ctx.v120_compression.set(False)
         ctx.extra_compression.set(False)
     elif ctx.copier.segclass.val=='1.15normal':
@@ -697,6 +710,10 @@ def pkl_report(ctx):
     print('obfuscated offsets:', ctx.obfuscated_offsets.getvalpr_yesno())
     if ctx.obfuscated_offsets.is_true():
         print(' offsets key:', ctx.offsets_key.getvalpr_hex1())
+
+    #if ctx.decompr.pos.val_known and ctx.approx_end_of_decompressor.val_known:
+    #    print('decompressor size:', ctx.approx_end_of_decompressor.val - \
+    #        ctx.decompr.pos.val)
 
 def pkl_write_descrambled(ctx):
     if ctx.is_scrambled.is_false_or_unk():
