@@ -221,35 +221,22 @@ def pkl_decode_intro(ctx):
         ctx.is_beta.set(True)
     elif byte_seq_matches(ctx, pos,
         b'\x2e\x8c\x1e??\xfc\x8c\xc8', 0x3f):
-        ctx.intro.segclass.set("betalh")
+        ctx.intro.segclass.set("beta_lh")
         ctx.is_beta.set(True)
     elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x8c\xdb\x03\xd8\x3b\x1e\x02\x00\x73\x1d\x83\xeb\x20\xfa\x8e'
-        b'\xd3\xbc\x00\x02\xfb\x83\xeb?\x8e\xc3\x53\xb9??\x33\xff\x57\xbe', 0x3f):
+        b'\xb8??\xba??\x8c\xdb\x03\xd8\x3b\x1e\x02\x00\x73', 0x3f):
         ctx.intro.segclass.set("1.00")
         ctx.is_scrambled.set(False)
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+15))
         ctx.position2.set(pos+16)
     elif byte_seq_matches(ctx, pos,
-        b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4??'
-        b'\xb8??\xba??\x8c', 0x3f):
-        ctx.intro.segclass.set("un2pack")
-        ctx.is_scrambled.set(False)
-        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+18+15))
-        ctx.position2.set(pos+18+16)
-    elif byte_seq_matches(ctx, pos,
-        b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4', 0x3f):
-        ctx.intro.segclass.set("un2pack_corrupt")
-    elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73\x1a\x2d\x20\x00\xfa\x8e\xd0'
-        b'\xfb\x2d??\x8e\xc0\x50\xb9??\x33\xff\x57\xbe', 0x3f):
+        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73', 0x3f):
         ctx.intro.segclass.set("1.12")
-        ctx.is_scrambled.set(False)
+        ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
         ctx.position2.set(pos+15)
     elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72?\xb4\x09\xba\x18\x01\xcd'
-        b'\x21\xcd\x20', 0x3f):
+        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
         ctx.intro.segclass.set("1.14")
         ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
@@ -261,44 +248,21 @@ def pkl_decode_intro(ctx):
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
         ctx.errorhandler.pos.set(pos+15)
     elif byte_seq_matches(ctx, pos,
-        b'\x50\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72?'
-        b'\xb4\x09\xba??\xcd\x21\xb8\x01\x4c\xcd\x21', 0x3f):
+        b'\x50\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
         ctx.intro.segclass.set("1.50")
         ctx.initial_key.set(getu16(ctx, pos+5))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+15))
         ctx.errorhandler.pos.set(pos+16)
     elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72?\xb4'
-        b'\x09\xba??\xcd\x21\xb4\x4c\xcd\x21', 0x3f):
-        ctx.intro.segclass.set('1.20var2')
-        ctx.initial_key.set(getu16(ctx, pos+4))
-        ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
-        ctx.errorhandler.pos.set(pos+15)
+        b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4??'
+        b'\xb8??\xba??\x8c', 0x3f):
+        ctx.intro.segclass.set("un2pack")
+        ctx.is_scrambled.set(False)
+        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+18+15))
+        ctx.position2.set(pos+18+16)
     elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73?\x2d\x20\x00', 0x3f):
-        ctx.intro.segclass.set('1.20var3')
-        ctx.initial_key.set(getu16(ctx, pos+4))
-        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
-        ctx.position2.set(pos+15)
-    elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72?\xb4\x09\xba??\xcd\x21\xb8\x01'
-        b'\x4c\xcd\x21', 0x3f):
-        ctx.intro.segclass.set("1.20var4")
-        ctx.initial_key.set(getu16(ctx, pos+4))
-        ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
-        ctx.errorhandler.pos.set(pos+15)
-    elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73\x12\x8b'
-        b'\xfc\x81\xef\x49\x03\x57\x57\xb9\xa5\x00\xbe', 0x3f):
-        ctx.intro.segclass.set('1.20var5')
-        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
-        ctx.position2.set(pos+15)
-    elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73\x12\x8b\xfc\x81\xef', 0x3f):
-        ctx.intro.segclass.set('1.20var6')
-        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
-        ctx.position2.set(pos+15)
-        ctx.initial_key.set(getu16(ctx, pos+4))
+        b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4', 0x3f):
+        ctx.intro.segclass.set("un2pack_corrupt")
 
     if not ctx.intro.segclass.val_known:
         ctx.errmsg = 'Unknown PKLITE version, or not a PKLITE-compressed file'
@@ -366,7 +330,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+20
         pos_of_endpos_field = pos+23
         pos_of_jmp_field = pos + 38
-    elif ctx.intro.segclass.val=='1.20var2' and byte_seq_matches(ctx, pos,
+    elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe????????\x74???\x03', 0x3f):
         found_params = 1
         ctx.descrambler.segclass.set('1.20var2')
@@ -374,8 +338,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
         pos_of_jmp_field = pos+28
-    elif (ctx.intro.segclass.val=='1.20var3' or ctx.intro.segclass.val=='1.20var4') and \
-        byte_seq_matches(ctx, pos,
+    elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe?????????\x74???\x03', 0x3f):
         found_params = 1
         ctx.descrambler.segclass.set('1.20pkzip204clike')
@@ -383,7 +346,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
         pos_of_jmp_field = pos+29
-    elif ctx.intro.segclass.val=='1.20var4' and byte_seq_matches(ctx, pos,
+    elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00?????????????????\xb9??\xbe??????????\x74???\x03', 0x3f):
         # TODO: The fact that we need several special patterns just for the
         # PKLITE 2.01 distribution files is concerning.
@@ -396,7 +359,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+21
         pos_of_endpos_field = pos+24
         pos_of_jmp_field = pos+35
-    elif ctx.intro.segclass.val=='1.20var4' and byte_seq_matches(ctx, pos,
+    elif byte_seq_matches(ctx, pos,
         b'\x8b\xfc\x81?????????????\xbb??\xbe??????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('chk4lite2.01like')
         found_params = 1
@@ -605,12 +568,7 @@ def pkl_deduce_settings2(ctx):
         ctx.decompr.segclass.val=='v120small_old':
         ctx.v120_compression.set(True)
 
-    if ctx.intro.segclass.val=='1.12':
-        ctx.v120_compression.set(False)
-        ctx.is_scrambled.set(False)
-    elif ctx.intro.segclass.val=='1.20var5':
-        ctx.is_scrambled.set(False)
-    elif ctx.copier.segclass.val=='1.14normal' or \
+    if ctx.copier.segclass.val=='1.14normal' or \
         ctx.intro.segclass.val=='megalite':
         ctx.v120_compression.set(False)
     elif ctx.copier.segclass.val=='1.15normal':
