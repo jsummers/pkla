@@ -21,11 +21,11 @@ of pkla deliberately tries to avoid this, though it may still do some
 scanning in a few places.
 
 TODO:
-* Detection of "extra" compression (for all files).
 * Documentation.
 * Support COM format. Easy, but low priority.
 * Better names for some of the segment "classes".
 * Better support for beta-version files.
+* Detect the version of PKLITE (or ZIP2EXE) that made the file.
 
 Not planned:
 * Decompression, or any feature that would require it.

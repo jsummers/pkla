@@ -416,9 +416,8 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_last_scrambled_word = ip_to_filepos(ctx, scrambled_endpos_raw)
         ctx.scrambled_section_startpos.set(follow_1byte_jmp(ctx, pos_of_jmp_field))
 
-    if ctx.is_scrambled.is_true(): # scrambled files always use extra compression
+    if ctx.is_scrambled.is_true():
         ctx.descrambler.pos.set(pos)
-        ctx.extra_compression.set(True)
     if ctx.scramble_algorithm.get()==2:
         ctx.v120_compression.set(True)
     elif ctx.scramble_algorithm.get()==1:
@@ -609,24 +608,48 @@ def pkl_deduce_settings2(ctx):
     elif ctx.copier.segclass.val=='1.14normal' or \
         ctx.intro.segclass.val=='megalite':
         ctx.v120_compression.set(False)
-        ctx.extra_compression.set(False)
     elif ctx.copier.segclass.val=='1.15normal':
         ctx.v120_compression.set(False)
-        ctx.extra_compression.set(False)
     elif ctx.copier.segclass.val=='1.50normal':
         ctx.v120_compression.set(False)
-        ctx.extra_compression.set(False)
         ctx.is_scrambled.set(False)
 
     if ctx.v120_compression.is_true():
-        ctx.extra_compression.set(True)
         if ctx.decompr.segclass.val=='common':
             ctx.large_compression.set(True)
         elif ctx.decompr.segclass.val=='v120small' or \
             ctx.decompr.segclass.val=='v120small_old':
             ctx.large_compression.set(False)
 
-def pkl_scan_decompr(ctx):
+# Detect 'extra' compression
+def pkl_scan_decompr1(ctx):
+    if not ctx.approx_end_of_decompressor.val_known:
+        return
+    if ctx.decompr.pos.val_known:
+        startpos = ctx.decompr.pos.val+94
+    elif ctx.is_beta.is_true() and ctx.codestart.val_known:
+        # Kind of a hack. For beta files, I don't know how to find the best
+        # place to search from.
+        startpos = ctx.codestart.val
+    else:
+        return
+
+    amt_to_scan = ctx.approx_end_of_decompressor.val - startpos
+
+    # These signatures are very strict, but seem to still work.
+    ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+        b'\xad\x95\xb2\x10\x72\x08\xa4\xd1\xed\x4a\x74')
+    if ok:
+        ctx.extra_compression.set(False)
+        return
+
+    # The critical part of this sig is [ac 32 c2 aa].
+    ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+        b'\xad\x95\xb2\x10\x72\x0b\xac\x32\xc2\xaa\xd1\xed\x4a\x74')
+    if ok:
+        ctx.extra_compression.set(True)
+
+def pkl_scan_decompr2(ctx):
     if not ctx.approx_end_of_decompressor.val_known:
         return
 
@@ -780,7 +803,9 @@ def main():
         pkl_decode_decompr(ctx)
     pkl_deduce_settings1(ctx)
     if ctx.errmsg=='':
-        pkl_scan_decompr(ctx)
+        pkl_scan_decompr1(ctx)
+    if ctx.errmsg=='':
+        pkl_scan_decompr2(ctx)
     pkl_deduce_settings2(ctx)
     pkl_report(ctx)
     if ctx.errmsg!='':
