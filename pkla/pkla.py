@@ -298,7 +298,6 @@ def pkl_detect_and_decode_descrambler(ctx):
         found_params = 1
         ctx.descrambler.segclass.set('1.14scrambled')
         ctx.scramble_algorithm.set(1) # 33 = XOR
-        ctx.v120_compression.set(False)  # v120 uses ADD, or no scrambling
         ctx.pos_of_scrambled_word_count = pos+11
         pos_of_endpos_field = pos+14
         pos_of_jmp_field = pos + 22
@@ -306,7 +305,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
         found_params = 1
-        ctx.descrambler.segclass.set('1.20var1')
+        ctx.descrambler.segclass.set('1.20var1') # e.g. pklite.exe 1.15
         ctx.scramble_algorithm.set(2)  # 03 = ADD
         ctx.pos_of_scrambled_word_count = pos+10
         pos_of_endpos_field = pos+13
@@ -333,7 +332,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe????????\x74???\x03', 0x3f):
         found_params = 1
-        ctx.descrambler.segclass.set('1.20var2')
+        ctx.descrambler.segclass.set('1.20var2') # e.g. pkzip.exe 2.04g
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
@@ -497,8 +496,7 @@ def pkl_decode_copier(ctx):
         ctx.copier.segclass.set('pklite2.01like')
         pos_of_decompr_pos_field = pos+11
     elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xfe\x06??\xb9??\x33\xff\x57\xbe??'
-        b'\xfc\xf3', 0x3f):
+        b'\x5a\x07\x06\xfe\x06??\xb9??\x33\xff\x57\xbe', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.50scrambled')
         pos_of_decompr_pos_field = pos+14
@@ -508,7 +506,7 @@ def pkl_decode_copier(ctx):
         ctx.copier.segclass.set('pkzip1.93like')
         pos_of_decompr_pos_field = pos+12
     elif byte_seq_matches(ctx, pos,
-        b'\x5a\x5f\x57\xb9??\xbe??\xfc\xf3', 0x3f):
+        b'\x5a\x5f\x57\xb9??\xbe', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.20var1small')
         pos_of_decompr_pos_field = pos+7
@@ -564,19 +562,6 @@ def pkl_deduce_settings1(ctx):
         ctx.approx_end_of_decompressor.set(ctx.start_of_cmpr_data.get())
 
 def pkl_deduce_settings2(ctx):
-    if ctx.decompr.segclass.val=='v120small' or \
-        ctx.decompr.segclass.val=='v120small_old':
-        ctx.v120_compression.set(True)
-
-    if ctx.copier.segclass.val=='1.14normal' or \
-        ctx.intro.segclass.val=='megalite':
-        ctx.v120_compression.set(False)
-    elif ctx.copier.segclass.val=='1.15normal':
-        ctx.v120_compression.set(False)
-    elif ctx.copier.segclass.val=='1.50normal':
-        ctx.v120_compression.set(False)
-        ctx.is_scrambled.set(False)
-
     if ctx.v120_compression.is_true():
         if ctx.decompr.segclass.val=='common':
             ctx.large_compression.set(True)
