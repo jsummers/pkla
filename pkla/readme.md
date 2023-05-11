@@ -23,7 +23,6 @@ scanning in a few places.
 TODO:
 * Detection of "extra" compression (for all files).
 * Documentation.
-* Support certain "protectors", like UN2PACK and MEGALITE.
 * Support COM format. Easy, but low priority.
 * Better names for some of the segment "classes".
 * Better support for beta-version files.

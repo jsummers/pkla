@@ -228,6 +228,16 @@ def pkl_decode_intro(ctx):
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+15))
         ctx.position2.set(pos+16)
     elif byte_seq_matches(ctx, pos,
+        b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4??'
+        b'\xb8??\xba??\x8c', 0x3f):
+        ctx.intro.segclass.set("un2pack")
+        ctx.is_scrambled.set(False)
+        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+18+15))
+        ctx.position2.set(pos+18+16)
+    elif byte_seq_matches(ctx, pos,
+        b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4', 0x3f):
+        ctx.intro.segclass.set("un2pack_corrupt")
+    elif byte_seq_matches(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73\x1a\x2d\x20\x00\xfa\x8e\xd0'
         b'\xfb\x2d??\x8e\xc0\x50\xb9??\x33\xff\x57\xbe', 0x3f):
         ctx.intro.segclass.set("1.12")
@@ -464,13 +474,19 @@ def pkl_decode_copier(ctx):
         found_copier = 1
         ctx.copier.segclass.set('1.00like')
         pos_of_decompr_pos_field = pos+23
-    if byte_seq_matches(ctx, pos,
+    elif byte_seq_matches(ctx, pos,
+        b'\x83\xeb?\xfa\x8e\xd3\xbc??\xfb\x83\xeb?\x8e\xc3'
+        b'\x53\xb9??\x2b\xff\x57\xbe', 0x3f):
+        found_copier = 1
+        ctx.copier.segclass.set('un2pack')
+        pos_of_decompr_pos_field = pos+23
+    elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\xfa\x8e\xd0\xfb\x2d??\x8e\xc0\x50\xb9??'
         b'\x33\xff\x57\xbe', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.12like')
         pos_of_decompr_pos_field = pos+20
-    if byte_seq_matches(ctx, pos,
+    elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\xfa\x8e\xd0\xbc??\xfb\x2d??\x8e\xc0\x50\xb9??'
         b'\x33\xff\x57\xbe', 0x3f):
         found_copier = 1
