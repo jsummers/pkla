@@ -196,12 +196,15 @@ def pkl_read_exe(ctx):
     else:
         ctx.codeend.set(512 * (e_cp-1) + e_cblp)
 
-    if ctx.file_size.get() >= ctx.codeend.get():
-        ctx.overlay_size.set(ctx.file_size.get() - ctx.codeend.get())
-
     ip = getu16(ctx, 20)
     cs = gets16(ctx, 22)
     ctx.entrypoint.set(ctx.codestart.get() + 16*cs + ip)
+
+    if ctx.codeend.get() <= ctx.file_size.get():
+        ctx.overlay_size.set(ctx.file_size.get() - ctx.codeend.get())
+    else:
+        ctx.errmsg = "Truncated EXE file"
+        return
 
     ctx.ver_info.set(getu16(ctx, 28))
 
@@ -753,6 +756,8 @@ def main():
     elif len(sys.argv)==3:
         ctx.infilename = sys.argv[1]
         ctx.outfilename = sys.argv[2]
+        if ctx.outfilename==ctx.infilename:
+            raise Exception("Filenames are the same")
         ctx.want_descrambled = True
     else:
         print('usage: <pkla.py> <infile> [<outfile>]')
