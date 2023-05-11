@@ -248,7 +248,7 @@ def pkl_decode_intro(ctx):
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
         ctx.position2.set(pos+15)
     elif byte_seq_matches(ctx, pos,
-        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72\x1b\xb4\x09\xba\x18\x01\xcd'
+        b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72?\xb4\x09\xba\x18\x01\xcd'
         b'\x21\xcd\x20', 0x3f):
         ctx.intro.segclass.set("1.14")
         ctx.initial_key.set(getu16(ctx, pos+4))
@@ -466,6 +466,11 @@ def pkl_decode_copier(ctx):
         pos = ctx.scrambled_section_startpos.get()
     else:
         pos = ctx.position2.get()
+
+    # A silly workaround for kws144.zip:KWS.EXE (KeyWord Search),
+    # which moves things around slightly, and adds NOPs.
+    while getbyte(ctx, pos)==0x90:
+        pos += 1
 
     found_copier = 0
     pos_of_decompr_pos_field = 0
