@@ -154,6 +154,27 @@ def byte_seq_matches(ctx, pos1, vals, wildcard):
 
     return True
 
+def find_byte_seq_match(ctx, startpos, maxbytes, vals, wildcard):
+    pos = startpos
+
+    while pos < startpos+maxbytes:
+
+        foundmatch = True
+
+        for i in range(len(vals)):
+            if vals[i] == wildcard:
+                continue
+            if ctx.blob[pos+i] != vals[i]:
+                foundmatch = False
+                break
+
+        if foundmatch:
+            return True, pos
+
+        pos += 1
+
+    return False, 0
+
 def find_byte_seq(ctx, startpos, maxbytes, vals):
     pos = startpos
 
@@ -286,7 +307,6 @@ def pkl_detect_and_decode_descrambler(ctx):
     if ctx.is_scrambled.is_false():
         return
 
-    found_params = 0
     scrambled_count_raw = 0
     pos_of_endpos_field = 0
     pos_of_jmp_field = 0
@@ -295,7 +315,6 @@ def pkl_detect_and_decode_descrambler(ctx):
     if byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x33\xc2\xab\xeb\xf6', 0x3f):
-        found_params = 1
         ctx.descrambler.segclass.set('1.14scrambled')
         ctx.scramble_algorithm.set(1) # 33 = XOR
         ctx.pos_of_scrambled_word_count = pos+11
@@ -304,7 +323,6 @@ def pkl_detect_and_decode_descrambler(ctx):
     elif byte_seq_matches(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
-        found_params = 1
         ctx.descrambler.segclass.set('1.20var1') # e.g. pklite.exe 1.15
         ctx.scramble_algorithm.set(2)  # 03 = ADD
         ctx.pos_of_scrambled_word_count = pos+10
@@ -313,7 +331,6 @@ def pkl_detect_and_decode_descrambler(ctx):
     elif byte_seq_matches(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
-        found_params = 1
         ctx.descrambler.segclass.set('1.20var1b') # e.g. pkzfind.exe
         ctx.scramble_algorithm.set(2)  # 03 = ADD
         ctx.pos_of_scrambled_word_count = pos+10
@@ -323,7 +340,6 @@ def pkl_detect_and_decode_descrambler(ctx):
         b'\x59\x2d\x20\x00\x8e\xd0\x51??\x00\x50\x80\x3e'
         b'\x41\x01\xc3\x75\xe6\x52\xb8??\xbe??\x56\x56\x52\x50\x90'
         b'???????\x74???????\x33', 0x3f):
-        found_params = 1
         ctx.descrambler.segclass.set('1.50scrambled')
         ctx.scramble_algorithm.set(1)
         ctx.pos_of_scrambled_word_count = pos+20
@@ -331,7 +347,6 @@ def pkl_detect_and_decode_descrambler(ctx):
         pos_of_jmp_field = pos + 38
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe????????\x74???\x03', 0x3f):
-        found_params = 1
         ctx.descrambler.segclass.set('1.20var2') # e.g. pkzip.exe 2.04g
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
@@ -339,7 +354,6 @@ def pkl_detect_and_decode_descrambler(ctx):
         pos_of_jmp_field = pos+28
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe?????????\x74???\x03', 0x3f):
-        found_params = 1
         ctx.descrambler.segclass.set('1.20pkzip204clike')
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
@@ -353,7 +367,6 @@ def pkl_detect_and_decode_descrambler(ctx):
         # code files from this era use in the descrambler doesn't help
         # matters.
         ctx.descrambler.segclass.set('pklite2.01like')
-        found_params = 1
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+21
         pos_of_endpos_field = pos+24
@@ -361,12 +374,12 @@ def pkl_detect_and_decode_descrambler(ctx):
     elif byte_seq_matches(ctx, pos,
         b'\x8b\xfc\x81?????????????\xbb??\xbe??????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('chk4lite2.01like')
-        found_params = 1
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+17
         pos_of_endpos_field = pos+20
         pos_of_jmp_field = pos+27
 
+    found_params = ctx.descrambler.segclass.val_known
     if found_params:
         ctx.is_scrambled.set(True)
         scrambled_count_raw = getu16(ctx, ctx.pos_of_scrambled_word_count)
@@ -601,10 +614,11 @@ def pkl_scan_decompr2(ctx):
     if not ctx.approx_end_of_decompressor.val_known:
         return
 
+    # All files except v1.20 should have this pattern near the end of the
+    # decompressor.
     endpos = ctx.approx_end_of_decompressor.get()
     amt_to_scan = 60  # 38 or slightly more is probably sufficient
     startpos = endpos-amt_to_scan
-
     ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
         b'\x01\x02\x00\x00\x03\x04\x05\x06'
         b'\x00\x00\x00\x00\x00\x00\x00\x00\x07\x08\x09\x0a\x0b')
@@ -620,31 +634,34 @@ def pkl_scan_decompr2(ctx):
             ctx.obfuscated_offsets.set(False)
         return
 
+    # Files w/o the above pattern, but with the below pattern, are presumed
+    # to be v1.20.
     amt_to_scan = 50  # 29 or slightly more is probably sufficient
     startpos = endpos-amt_to_scan
     ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
         b'\x33\xc0\x8b\xd8\x8b\xc8\x8b\xd0\x8b\xe8\x8b\xf0\x8b')
     if ok:
         ctx.v120_compression.set(True)
-        # TODO: Need a better way to do this.
-        if byte_seq_matches(ctx, foundpos-113, b'\xac\x34?\x8a', 0x3f):
+
+        # Detect "obfuscated offsets".
+
+        # Strict patterns (v1.20 only):
+        # d1 d3 80 eb 21 86 df fe c7 ac       8a d8 56 8b f7 2b f3 = not-obf.
+        # d1 d3 80 eb 21 86 df fe c7 ac 34 ?  8a d8 56 8b f7 2b f3 = obf.off.
+
+        startpos = ctx.decompr.pos.get() + 200
+        amt_to_scan = endpos - startpos
+        ok, foundpos = find_byte_seq_match(ctx, startpos, amt_to_scan,
+            b'\xac\x34?\x8a', 0x3f)
+        if ok:
             ctx.obfuscated_offsets.set(True)
-            ctx.offsets_key.set(getbyte(ctx, foundpos-111))
-        elif byte_seq_matches(ctx, foundpos-68, b'\xac\x34?\x8a', 0x3f):
-            ctx.obfuscated_offsets.set(True)
-            ctx.offsets_key.set(getbyte(ctx, foundpos-66))
-        elif byte_seq_matches(ctx, foundpos-111, b'\xac\x8a', 0x3f):
-            ctx.obfuscated_offsets.set(False)
-        elif byte_seq_matches(ctx, foundpos-103, b'\xac\x8a', 0x3f): # sd.exe 3.00
-            ctx.obfuscated_offsets.set(False)
-        elif byte_seq_matches(ctx, foundpos-101, b'\xac\x8a', 0x3f): # pkzmenu.exe
-            ctx.obfuscated_offsets.set(False)
-        elif byte_seq_matches(ctx, foundpos-66, b'\xac\x8a', 0x3f):
-            ctx.obfuscated_offsets.set(False)
-        elif byte_seq_matches(ctx, foundpos-70, b'\xac\x8a', 0x3f): # pkzip.exe 1.93
-            ctx.obfuscated_offsets.set(False)
-        elif byte_seq_matches(ctx, foundpos-58, b'\xac\x8a', 0x3f): # whatkey.exe 300
-            ctx.obfuscated_offsets.set(False)
+            ctx.offsets_key.set(getbyte(ctx, foundpos+2))
+
+        if not ctx.obfuscated_offsets.val_known:
+            ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+                b'\xac\x8a\xd8')
+            if ok:
+                ctx.obfuscated_offsets.set(False)
 
 def pkl_report(ctx):
     print('file:', ctx.infilename)
