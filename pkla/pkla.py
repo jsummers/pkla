@@ -97,6 +97,7 @@ class context:
         ctx.position2 = pkla_number()  # Next part after intro: descrambler or copier pos
         ctx.descrambler = pkla_segment()
         ctx.copier = pkla_segment()
+        ctx.copier_subclass = pkla_string()
         ctx.decompr = pkla_segment()
 
         ctx.approx_end_of_decompressor = pkla_number()
@@ -158,7 +159,6 @@ def find_byte_seq_match(ctx, startpos, maxbytes, vals, wildcard):
     pos = startpos
 
     while pos < startpos+maxbytes:
-
         foundmatch = True
 
         for i in range(len(vals)):
@@ -434,6 +434,16 @@ def pkl_descramble(ctx):
             val = n1 ^ n2
         putu16(ctx, val, i)
 
+# What we call the 'copier' is the part of the code that starts at
+# the beginning of the scrambled section, if there is a scrambled
+# section.
+# If there is no scrambled section, it's the part that executes right
+# after a successful check for sufficient memory.
+# The 'copier' always ends with a small block of code that copies the
+# decompressor out of the way. Then it does some type of 'ret'
+# instruction to "return" to an address that it recently pushed onto
+# the stack. It's that pushed address that we want to find. We'll use
+# it to reliably find the start of the decompressor in the file.
 def pkl_decode_copier(ctx):
     if ctx.copier.pos.val_known:
         pos = ctx.copier.pos.get()
@@ -442,92 +452,52 @@ def pkl_decode_copier(ctx):
     else:
         pos = ctx.position2.get()
 
-    # A silly workaround for kws144.zip:KWS.EXE (KeyWord Search),
-    # which moves things around slightly, and adds NOPs.
-    while getbyte(ctx, pos)==0x90:
-        pos += 1
-
-    found_copier = 0
     pos_of_decompr_pos_field = 0
+    amt_to_scan = 60
+    found = False
 
-    if byte_seq_matches(ctx, pos,
-        b'\x83\xeb?\xfa\x8e\xd3\xbc??\xfb\x83\xeb?\x8e\xc3'
-        b'\x53\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.00like')
-        pos_of_decompr_pos_field = pos+23
-    elif byte_seq_matches(ctx, pos,
-        b'\x83\xeb?\xfa\x8e\xd3\xbc??\xfb\x83\xeb?\x8e\xc3'
-        b'\x53\xb9??\x2b\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('un2pack')
-        pos_of_decompr_pos_field = pos+23
-    elif byte_seq_matches(ctx, pos,
-        b'\x2d\x20\x00\xfa\x8e\xd0\xfb\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.12like')
-        pos_of_decompr_pos_field = pos+20
-    elif byte_seq_matches(ctx, pos,
-        b'\x2d\x20\x00\xfa\x8e\xd0\xbc??\xfb\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('sd300like')
-        pos_of_decompr_pos_field = pos+23
-    elif byte_seq_matches(ctx, pos,
-        b'\x2d\x20\x00\x8e\xd0\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.14normal')
-        pos_of_decompr_pos_field = pos+18
-    elif byte_seq_matches(ctx, pos,
-        b'\x2d\x20\x00\x8e\xd0\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x56\xbe??\xfc\xf2\xa5\xca', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('megalite')
-        pos_of_decompr_pos_field = pos+18
-    elif byte_seq_matches(ctx, pos,
-        b'\x2d\x20\x00\x8e\xd0\x2d??\x90\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.15normal')
-        pos_of_decompr_pos_field = pos+19
-    elif byte_seq_matches(ctx, pos,
-        b'\x59\x2d\x20\x00\x8e\xd0\x51\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.50normal')
-        pos_of_decompr_pos_field = pos+20
-    elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.14scrambled')
-        pos_of_decompr_pos_field = pos+10
-    elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xb9??\x33\xff\x57\xfc\xbe??\xf3\xa5\xcb', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('pklite2.01like')
-        pos_of_decompr_pos_field = pos+11
-    elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xfe\x06??\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xca', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.50scrambled')
-        pos_of_decompr_pos_field = pos+14
-    elif byte_seq_matches(ctx, pos,
-        b'\x8b\xfc\x81\xef??\x57\x57\xb9??\xbe??\xfc\xf3\xa5\xc3', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('pkzip1.93like')
-        pos_of_decompr_pos_field = pos+12
-    elif byte_seq_matches(ctx, pos,
-        b'\x5a\x5f\x57\xb9??\xbe??\xfc\xf3\xa5\xc3', 0x3f):
-        found_copier = 1
-        ctx.copier.segclass.set('1.20var1small')
-        pos_of_decompr_pos_field = pos+7
+    if not found:
+        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+            b'\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f)
+        if found:
+            ctx.copier.segclass.set('common')
+            pos_of_decompr_pos_field = foundpos+7
+    if not found:
+        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+            b'\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xca', 0x3f)
+        if found:
+            ctx.copier.segclass.set('1.50scrambled')
+            pos_of_decompr_pos_field = foundpos+7
+    if not found:
+        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+            b'\xb9??\x33\xff\x57\xfc\xbe??\xf3\xa5\xcb', 0x3f)
+        if found:
+            ctx.copier.segclass.set('pklite2.01like')
+            pos_of_decompr_pos_field = foundpos+8
+    if not found:
+        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+            b'\x57\xb9??\xbe??\xfc\xf3\xa5\xc3', 0x3f)
+        if found:
+            ctx.copier.segclass.set('1.20var1small')
+            pos_of_decompr_pos_field = foundpos+5
+    if not found:
+        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+            b'\xb9??\x33\xff\x56\xbe??\xfc\xf2\xa5\xca', 0x3f)
+        if found:
+            ctx.copier.segclass.set('megalite')
+            pos_of_decompr_pos_field = foundpos+7
+    if not found:
+        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+            b'\xb9??\x2b\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f)
+        if found:
+            ctx.copier.segclass.set('un2pack')
+            pos_of_decompr_pos_field = foundpos+7
 
-    if found_copier:
+    if found:
+        ctx.copier_subclass.set('%s+%d' % (ctx.copier.segclass.get(), \
+            pos_of_decompr_pos_field-pos))
         ctx.copier.pos.set(pos)
-        if ctx.decompr.pos.get()==0:
-            ctx.decompr.pos.set(ip_to_filepos(ctx, getu16(ctx, pos_of_decompr_pos_field)))
+        ctx.decompr.pos.set(ip_to_filepos(ctx, getu16(ctx, pos_of_decompr_pos_field)))
         if ctx.copier.pos.get()==ctx.position2.get():
             # We found the copier at 'position2', so
             # there's definitely no scrambled section.
@@ -684,6 +654,8 @@ def pkl_report(ctx):
 
     print('copier pos:', ctx.copier.pos.getvalpr())
     print('copier class:', ctx.copier.segclass.val)
+    if ctx.copier_subclass.val_known:
+        print('copier subclass:', ctx.copier_subclass.getvalpr())
 
     print('error handler pos:', ctx.errorhandler.pos.getvalpr())
     #print('error handler class:', ctx.errorhandler.segclass.val)

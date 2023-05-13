@@ -14,11 +14,8 @@ out a good way to do this.
 Its main strategy is to test for signature byte patterns in known
 locations, follow "jumps" and similar instructions, and walk through the
 file, using extensive knowledge of the different versions of the format.
-
-Another strategy would be to rely heavily on scanning for byte patterns in
-not-precisely-known locations. This has pros and cons. The current version
-of pkla deliberately tries to avoid this, though it may still do some
-scanning in a few places.
+Sometimes it resorts to scanning a part of the file for particular byte
+patterns, if there are too many format variants to enumerate.
 
 TODO:
 * Documentation.
