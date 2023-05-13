@@ -452,74 +452,74 @@ def pkl_decode_copier(ctx):
 
     if byte_seq_matches(ctx, pos,
         b'\x83\xeb?\xfa\x8e\xd3\xbc??\xfb\x83\xeb?\x8e\xc3'
-        b'\x53\xb9??\x33\xff\x57\xbe', 0x3f):
+        b'\x53\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.00like')
         pos_of_decompr_pos_field = pos+23
     elif byte_seq_matches(ctx, pos,
         b'\x83\xeb?\xfa\x8e\xd3\xbc??\xfb\x83\xeb?\x8e\xc3'
-        b'\x53\xb9??\x2b\xff\x57\xbe', 0x3f):
+        b'\x53\xb9??\x2b\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('un2pack')
         pos_of_decompr_pos_field = pos+23
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\xfa\x8e\xd0\xfb\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe', 0x3f):
+        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.12like')
         pos_of_decompr_pos_field = pos+20
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\xfa\x8e\xd0\xbc??\xfb\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe', 0x3f):
+        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('sd300like')
         pos_of_decompr_pos_field = pos+23
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe', 0x3f):
+        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.14normal')
         pos_of_decompr_pos_field = pos+18
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x56\xbe', 0x3f):
+        b'\x33\xff\x56\xbe??\xfc\xf2\xa5\xca', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('megalite')
         pos_of_decompr_pos_field = pos+18
     elif byte_seq_matches(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x90\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe', 0x3f):
+        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.15normal')
         pos_of_decompr_pos_field = pos+19
     elif byte_seq_matches(ctx, pos,
         b'\x59\x2d\x20\x00\x8e\xd0\x51\x2d??\x8e\xc0\x50\xb9??'
-        b'\x33\xff\x57\xbe', 0x3f):
+        b'\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.50normal')
         pos_of_decompr_pos_field = pos+20
     elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xb9??\x33\xff\x57\xbe', 0x3f):
+        b'\x5a\x07\x06\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.14scrambled')
         pos_of_decompr_pos_field = pos+10
     elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xb9??\x33\xff\x57\xfc\xbe', 0x3f):
+        b'\x5a\x07\x06\xb9??\x33\xff\x57\xfc\xbe??\xf3\xa5\xcb', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('pklite2.01like')
         pos_of_decompr_pos_field = pos+11
     elif byte_seq_matches(ctx, pos,
-        b'\x5a\x07\x06\xfe\x06??\xb9??\x33\xff\x57\xbe', 0x3f):
+        b'\x5a\x07\x06\xfe\x06??\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xca', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.50scrambled')
         pos_of_decompr_pos_field = pos+14
     elif byte_seq_matches(ctx, pos,
-        b'\x8b\xfc\x81\xef??\x57\x57\xb9??\xbe', 0x3f):
+        b'\x8b\xfc\x81\xef??\x57\x57\xb9??\xbe??\xfc\xf3\xa5\xc3', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('pkzip1.93like')
         pos_of_decompr_pos_field = pos+12
     elif byte_seq_matches(ctx, pos,
-        b'\x5a\x5f\x57\xb9??\xbe', 0x3f):
+        b'\x5a\x5f\x57\xb9??\xbe??\xfc\xf3\xa5\xc3', 0x3f):
         found_copier = 1
         ctx.copier.segclass.set('1.20var1small')
         pos_of_decompr_pos_field = pos+7
