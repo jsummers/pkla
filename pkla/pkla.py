@@ -91,6 +91,7 @@ class context:
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
         ctx.overlay_size = pkla_number()
+        ctx.createdby = pkla_string()
 
         ctx.intro = pkla_segment()
         ctx.errorhandler = pkla_segment()
@@ -633,6 +634,65 @@ def pkl_scan_decompr2(ctx):
             if ok:
                 ctx.obfuscated_offsets.set(False)
 
+def pkl_fingerprint_extra(ctx):
+    if ctx.intro.segclass.val=='1.12' and \
+        ctx.copier_subclass.val=='common+20':
+        ctx.createdby.set('PKLITE 1.12-1.13 registered')
+    elif ctx.intro.segclass.val=='1.14' and \
+        ctx.is_scrambled.is_true() and \
+        ctx.copier_subclass.val=='common+10' and \
+        ctx.decompr.segclass.val=='common':
+        ctx.createdby.set('PKLITE 1.14 registered')
+    elif ctx.intro.segclass.val=='1.14' and \
+        ctx.is_scrambled.is_true() and \
+        ctx.copier_subclass.val=='common+10' and \
+        ctx.decompr.segclass.val=='1.15':
+        ctx.createdby.set('PKLITE 1.15 registered')
+    elif ctx.intro.segclass.val=='1.50' and \
+        ctx.is_scrambled.is_true() and \
+        ctx.copier_subclass.val=='1.50scrambled+14' and \
+        ctx.decompr.segclass.val=='common':
+        ctx.createdby.set('PKLITE 1.50-2.01 registered')
+
+def pkl_fingerprint_v120(ctx):
+    pass
+
+def pkl_fingerprint(ctx):
+    if not ctx.v120_compression.val_known:
+        return
+    if not ctx.extra_compression.val_known:
+        return
+    if not ctx.large_compression.val_known:
+        return
+    if not ctx.is_scrambled.val_known:
+        return
+
+    if ctx.v120_compression.is_true():
+        pkl_fingerprint_v120(ctx)
+        return
+    if ctx.extra_compression.is_true():
+        pkl_fingerprint_extra(ctx)
+        return
+
+    if ctx.intro.segclass.val=='1.00' and \
+        ctx.copier_subclass.val=='common+23':
+        ctx.createdby.set('PKLITE 1.00-1.05')
+    elif ctx.intro.segclass.val=='1.12' and \
+        ctx.copier_subclass.val=='common+20':
+        ctx.createdby.set('PKLITE 1.12-1.13')
+    elif ctx.intro.segclass.val=='1.14' and \
+        ctx.copier_subclass.val=='common+18' and \
+        ctx.decompr.segclass.val=='common':
+        ctx.createdby.set('PKLITE 1.14')
+    elif ctx.intro.segclass.val=='1.14' and \
+        ctx.copier_subclass.val=='common+19' and \
+        ctx.decompr.segclass.val=='1.15':
+        ctx.createdby.set('PKLITE 1.15')
+    elif ctx.intro.segclass.val=='1.50' and \
+        ctx.copier_subclass.val=='common+20' and \
+        ctx.decompr.segclass.val=='common':
+        ctx.createdby.set('PKLITE 1.50-2.01')
+
 def pkl_report(ctx):
     print('file:', ctx.infilename)
     print('file size:', ctx.file_size.getvalpr())
@@ -690,6 +750,8 @@ def pkl_report(ctx):
     if ctx.obfuscated_offsets.is_true():
         print(' offsets key:', ctx.offsets_key.getvalpr_hex1())
 
+    print('created by:', ctx.createdby.getvalpr())
+
     #if ctx.decompr.pos.val_known and ctx.approx_end_of_decompressor.val_known:
     #    print('decompressor size:', ctx.approx_end_of_decompressor.val - \
     #        ctx.decompr.pos.val)
@@ -744,6 +806,8 @@ def main():
     if ctx.errmsg=='':
         pkl_scan_decompr2(ctx)
     pkl_deduce_settings2(ctx)
+    if ctx.errmsg=='':
+        pkl_fingerprint(ctx)
     pkl_report(ctx)
     if ctx.errmsg!='':
         print('Error:', ctx.errmsg)
