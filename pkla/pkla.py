@@ -689,6 +689,14 @@ def pkl_fingerprint_extra(ctx):
             ctx.createdby.set('PKLITE 1.15 registered')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.50' and \
+            ctx.descrambler.segclass.val=='1.50scrambled' and \
+            ctx.copier_subclass.val=='common+10' and \
+            ctx.decompr.segclass.val=='common':
+            if bseq_exact(ctx, ctx.start_of_cmpr_data.val+304,
+                b'\x3a\xef\x2c\x13\x2c\x0f\xf2\x63\x2c\x12\x2c\xed\xaa\xfc\x4b\x38'):
+                ctx.createdby.set('ZIP2EXE 2.50 registered')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.50' and \
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='1.50scrambled+14' and \
             ctx.decompr.segclass.val=='common':
