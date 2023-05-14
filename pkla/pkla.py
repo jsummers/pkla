@@ -145,7 +145,7 @@ def follow_1byte_jmp(ctx, pos):
 def ip_to_filepos(ctx, ip):
     return ctx.codestart.get() + (ip - 0x0100)
 
-def byte_seq_matches(ctx, pos1, vals, wildcard):
+def bseq_match(ctx, pos1, vals, wildcard):
     if pos1+len(vals) > len(ctx.blob):
         return False
 
@@ -157,7 +157,17 @@ def byte_seq_matches(ctx, pos1, vals, wildcard):
 
     return True
 
-def find_byte_seq_match(ctx, startpos, maxbytes, vals, wildcard):
+def bseq_exact(ctx, pos1, vals, wildcard):
+    if pos1+len(vals) > len(ctx.blob):
+        return False
+
+    for i in range(len(vals)):
+        if ctx.blob[pos1+i] != vals[i]:
+            return False
+
+    return True
+
+def find_bseq_match(ctx, startpos, maxbytes, vals, wildcard):
     pos = startpos
 
     while pos < startpos+maxbytes:
@@ -177,7 +187,7 @@ def find_byte_seq_match(ctx, startpos, maxbytes, vals, wildcard):
 
     return False, 0
 
-def find_byte_seq(ctx, startpos, maxbytes, vals):
+def find_bseq_exact(ctx, startpos, maxbytes, vals):
     pos = startpos
 
     while pos < startpos+maxbytes:
@@ -237,7 +247,7 @@ def pkl_read_exe(ctx):
 def pkl_decode_overlay(ctx):
     if ctx.overlay_size.val < 1:
         return
-    if byte_seq_matches(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04', 0x3f):
+    if bseq_exact(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04', 0x3f):
         ctx.overlay.segclass.set('ZIP')
 
 # Decode the first part of the executable code, and
@@ -247,52 +257,52 @@ def pkl_decode_overlay(ctx):
 def pkl_decode_intro(ctx):
     pos = ctx.entrypoint.get()
 
-    if byte_seq_matches(ctx, pos,
+    if bseq_match(ctx, pos,
         b'\x2e\x8c\x1e??\x8b\x1e??\x8c\xda??????\x72', 0x3f):
         ctx.intro.segclass.set('beta')
         ctx.is_beta.set(True)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x2e\x8c\x1e??\xfc\x8c\xc8', 0x3f):
         ctx.intro.segclass.set("beta_lh")
         ctx.is_beta.set(True)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x8c\xdb\x03\xd8\x3b\x1e\x02\x00\x73', 0x3f):
         ctx.intro.segclass.set("1.00")
         ctx.is_scrambled.set(False)
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+15))
         ctx.position2.set(pos+16)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73', 0x3f):
         ctx.intro.segclass.set("1.12")
         ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
         ctx.position2.set(pos+15)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
         ctx.intro.segclass.set("1.14")
         ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
         ctx.errorhandler.pos.set(pos+15)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x2d\x73\x67\x72', 0x3f):
         ctx.intro.segclass.set("megalite")
         ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
         ctx.errorhandler.pos.set(pos+15)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x50\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
         ctx.intro.segclass.set("1.50")
         ctx.initial_key.set(getu16(ctx, pos+5))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+15))
         ctx.errorhandler.pos.set(pos+16)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4??'
         b'\xb8??\xba??\x8c', 0x3f):
         ctx.intro.segclass.set("un2pack")
         ctx.is_scrambled.set(False)
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+18+15))
         ctx.position2.set(pos+18+16)
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4', 0x3f):
         ctx.intro.segclass.set("un2pack_corrupt")
 
@@ -323,7 +333,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     pos_of_jmp_field = 0
     pos = ctx.position2.get()
 
-    if byte_seq_matches(ctx, pos,
+    if bseq_match(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x33\xc2\xab\xeb\xf6', 0x3f):
         ctx.descrambler.segclass.set('1.14scrambled')
@@ -331,7 +341,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+11
         pos_of_endpos_field = pos+14
         pos_of_jmp_field = pos + 22
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
         ctx.descrambler.segclass.set('1.20var1') # e.g. pklite.exe 1.15
@@ -339,7 +349,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+10
         pos_of_endpos_field = pos+13
         pos_of_jmp_field = pos + 20
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
         ctx.descrambler.segclass.set('1.20var1b') # e.g. pkzfind.exe
@@ -347,7 +357,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+10
         pos_of_endpos_field = pos+13
         pos_of_jmp_field = pos + 21
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x59\x2d\x20\x00\x8e\xd0\x51??\x00\x50\x80\x3e'
         b'\x41\x01\xc3\x75\xe6\x52\xb8??\xbe??\x56\x56\x52\x50\x90'
         b'???????\x74???????\x33', 0x3f):
@@ -356,21 +366,21 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+20
         pos_of_endpos_field = pos+23
         pos_of_jmp_field = pos + 38
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe????????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('1.20var2') # e.g. pkzip.exe 2.04g
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
         pos_of_jmp_field = pos+28
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe?????????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('1.20pkzip204clike')
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
         pos_of_jmp_field = pos+29
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x2d\x20\x00?????????????????\xb9??\xbe??????????\x74???\x03', 0x3f):
         # TODO: The fact that we need several special patterns just for the
         # PKLITE 2.01 distribution files is concerning.
@@ -382,7 +392,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         ctx.pos_of_scrambled_word_count = pos+21
         pos_of_endpos_field = pos+24
         pos_of_jmp_field = pos+35
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81?????????????\xbb??\xbe??????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('chk4lite2.01like')
         ctx.scramble_algorithm.set(2)
@@ -468,37 +478,37 @@ def pkl_decode_copier(ctx):
     found = False
 
     if not found:
-        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
             b'\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f)
         if found:
             ctx.copier.segclass.set('common')
             pos_of_decompr_pos_field = foundpos+7
     if not found:
-        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
             b'\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xca', 0x3f)
         if found:
             ctx.copier.segclass.set('1.50scrambled')
             pos_of_decompr_pos_field = foundpos+7
     if not found:
-        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
             b'\xb9??\x33\xff\x57\xfc\xbe??\xf3\xa5\xcb', 0x3f)
         if found:
             ctx.copier.segclass.set('pklite2.01like')
             pos_of_decompr_pos_field = foundpos+8
     if not found:
-        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
             b'\x57\xb9??\xbe??\xfc\xf3\xa5\xc3', 0x3f)
         if found:
             ctx.copier.segclass.set('1.20var1small')
             pos_of_decompr_pos_field = foundpos+5
     if not found:
-        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
             b'\xb9??\x33\xff\x56\xbe??\xfc\xf2\xa5\xca', 0x3f)
         if found:
             ctx.copier.segclass.set('megalite')
             pos_of_decompr_pos_field = foundpos+7
     if not found:
-        found, foundpos = find_byte_seq_match(ctx, pos, amt_to_scan,
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
             b'\xb9??\x2b\xff\x57\xbe??\xfc\xf3\xa5\xcb', 0x3f)
         if found:
             ctx.copier.segclass.set('un2pack')
@@ -521,23 +531,23 @@ def pkl_decode_decompr(ctx):
 
     pos = ctx.decompr.pos.get()
 
-    if byte_seq_matches(ctx, pos,
+    if bseq_match(ctx, pos,
         b'\xfd\x8c\xdb\x53\x83\xc3', 0x3f):
         ctx.start_of_cmpr_data.set(ip_to_filepos(ctx,
             16 * getbyte(ctx, pos+6)))
         ctx.decompr.segclass.set('common')
-    elif byte_seq_matches(ctx, pos,
+    elif bseq_match(ctx, pos,
             b'\xfd\x8c\xdb\x53\x81\xc3', 0x3f):
         ctx.start_of_cmpr_data.set(ip_to_filepos(ctx,
             16 * getu16(ctx, pos+6)))
         ctx.decompr.segclass.set('1.15')
-    elif byte_seq_matches(ctx, pos, \
+    elif bseq_match(ctx, pos, \
         b'\xfd\x5f\xc7\x85????\x4f\x4f\xbe??\x03\xf2'
         b'\x8b\xca\xd1\xe9\xf3', 0x3f):
         ctx.start_of_cmpr_data.set(2 + ip_to_filepos(ctx,
             getu16(ctx, pos+11)))
         ctx.decompr.segclass.set('v120small')
-    elif byte_seq_matches(ctx, pos, \
+    elif bseq_match(ctx, pos, \
         b'\xfd\x5f\x4f\x4f\xbe??\x03\xf2\x8b\xca\xd1\xe9\xf3', 0x3f):
         ctx.start_of_cmpr_data.set(2 + ip_to_filepos(ctx,
             getu16(ctx, pos+5)))
@@ -579,14 +589,14 @@ def pkl_scan_decompr1(ctx):
     amt_to_scan = ctx.approx_end_of_decompressor.val - startpos
 
     # These signatures are very strict, but seem to still work.
-    ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+    ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
         b'\xad\x95\xb2\x10\x72\x08\xa4\xd1\xed\x4a\x74')
     if ok:
         ctx.extra_compression.set(False)
         return
 
     # The critical part of this sig is [ac 32 c2 aa].
-    ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+    ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
         b'\xad\x95\xb2\x10\x72\x0b\xac\x32\xc2\xaa\xd1\xed\x4a\x74')
     if ok:
         ctx.extra_compression.set(True)
@@ -600,7 +610,7 @@ def pkl_scan_decompr2(ctx):
     endpos = ctx.approx_end_of_decompressor.get()
     amt_to_scan = 60  # 38 or slightly more is probably sufficient
     startpos = endpos-amt_to_scan
-    ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+    ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
         b'\x01\x02\x00\x00\x03\x04\x05\x06'
         b'\x00\x00\x00\x00\x00\x00\x00\x00\x07\x08\x09\x0a\x0b')
     if ok:
@@ -619,7 +629,7 @@ def pkl_scan_decompr2(ctx):
     # to be v1.20.
     amt_to_scan = 50  # 29 or slightly more is probably sufficient
     startpos = endpos-amt_to_scan
-    ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+    ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
         b'\x33\xc0\x8b\xd8\x8b\xc8\x8b\xd0\x8b\xe8\x8b\xf0\x8b')
     if ok:
         ctx.v120_compression.set(True)
@@ -632,14 +642,14 @@ def pkl_scan_decompr2(ctx):
 
         startpos = ctx.decompr.pos.get() + 200
         amt_to_scan = endpos - startpos
-        ok, foundpos = find_byte_seq_match(ctx, startpos, amt_to_scan,
+        ok, foundpos = find_bseq_match(ctx, startpos, amt_to_scan,
             b'\xac\x34?\x8a', 0x3f)
         if ok:
             ctx.obfuscated_offsets.set(True)
             ctx.offsets_key.set(getbyte(ctx, foundpos+2))
 
         if not ctx.obfuscated_offsets.val_known:
-            ok, foundpos = find_byte_seq(ctx, startpos, amt_to_scan,
+            ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
                 b'\xac\x8a\xd8')
             if ok:
                 ctx.obfuscated_offsets.set(False)
@@ -670,23 +680,23 @@ def pkl_fingerprint_v120(ctx):
             ctx.descrambler.segclass.val=='1.20var1' and \
             ctx.copier_subclass.val=='1.20var1small+7' and \
             ctx.decompr.segclass.val=='v120small':
-            if byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+306,
+            if bseq_exact(ctx, ctx.start_of_cmpr_data.val+306,
                 b'\xec\xd5\x14\x32\xc0\x09\x43\xe1\xc7\x11\x8d\xc2\xec\x72\xfc\xcc',
                 0xff):
                 ctx.createdby.set('ZIP2EXE 2.04c shareware')
-            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+306,
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+306,
                 b'\x03\xf8\xd9\x18\x09\x43\xed\xcb\x15\x89\xc6\xcc\xbc\xf8\x7e\xf0',
                 0xff):
                 ctx.createdby.set('ZIP2EXE 2.04c registered')
-            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+12402,
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\x54\xb4\xc8\x5a\x9b\x6b\x46\x86\x67\x77\xcf\xdf\xce\x00\x00\x9f',
                 0xff):
                 ctx.createdby.set('ZIP2EXE 2.04e shareware')
-            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+12402,
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\xb3\xc9\x59\x9a\x64\x47\x85\x66\x70\xce\xdc\x00\x00\xdf\x80\x46',
                 0xff):
                 ctx.createdby.set('ZIP2EXE 2.04g shareware')
-            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+12402,
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\xed\xf8\xb0\xa0\x5c\xf8\xb8\x28\x5c\xdc\x41\x00\x00\x80\x6c\xad',
                 0xff):
                 ctx.createdby.set('ZIP2EXE 2.04g registered')
@@ -695,7 +705,7 @@ def pkl_fingerprint_v120(ctx):
             ctx.descrambler.segclass.val=='1.20var1b' and \
             ctx.copier_subclass.val=='1.20var1small+7' and \
             ctx.decompr.segclass.val=='v120small':
-            if byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+314,
+            if bseq_exact(ctx, ctx.start_of_cmpr_data.val+314,
                 b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22',
                 0xff):
                 ctx.createdby.set('ZIP2EXE 2.50 shareware')
