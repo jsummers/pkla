@@ -719,24 +719,43 @@ def pkl_fingerprint(ctx):
         pkl_fingerprint_extra(ctx)
         return
 
-    if ctx.intro.segclass.val=='1.00' and \
-        ctx.copier_subclass.val=='common+23':
-        ctx.createdby.set('PKLITE 1.00-1.05')
-    elif ctx.intro.segclass.val=='1.12' and \
-        ctx.copier_subclass.val=='common+20':
-        ctx.createdby.set('PKLITE 1.12-1.13')
-    elif ctx.intro.segclass.val=='1.14' and \
-        ctx.copier_subclass.val=='common+18' and \
-        ctx.decompr.segclass.val=='common':
-        ctx.createdby.set('PKLITE 1.14')
-    elif ctx.intro.segclass.val=='1.14' and \
-        ctx.copier_subclass.val=='common+19' and \
-        ctx.decompr.segclass.val=='1.15':
-        ctx.createdby.set('PKLITE 1.15')
-    elif ctx.intro.segclass.val=='1.50' and \
-        ctx.copier_subclass.val=='common+20' and \
-        ctx.decompr.segclass.val=='common':
-        ctx.createdby.set('PKLITE 1.50-2.01')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.00' and \
+            ctx.copier_subclass.val=='common+23':
+            if bseq_exact(ctx, ctx.decompr.pos.val+9, b'\xbe\xfe\xff'):
+                ctx.createdby.set('PKLITE 1.00-1.03')
+            elif bseq_exact(ctx, ctx.decompr.pos.val+9, b'\x8c\xcd'):
+                ctx.createdby.set('PKLITE 1.05')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.12' and \
+            ctx.copier_subclass.val=='common+20':
+            if ctx.large_compression.val:
+                x = getbyte(ctx, ctx.decompr.pos.val+254)
+                if x==0xfa:
+                    ctx.createdby.set('PKLITE 1.12')
+                elif x==0x1e:
+                    ctx.createdby.set('PKLITE 1.13')
+            else:
+                x = getbyte(ctx, ctx.decompr.pos.val+220)
+                if x==0xfa:
+                    ctx.createdby.set('PKLITE 1.12')
+                elif x==0x1e:
+                    ctx.createdby.set('PKLITE 1.13')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.14' and \
+            ctx.copier_subclass.val=='common+18' and \
+            ctx.decompr.segclass.val=='common':
+            ctx.createdby.set('PKLITE 1.14')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.14' and \
+            ctx.copier_subclass.val=='common+19' and \
+            ctx.decompr.segclass.val=='1.15':
+            ctx.createdby.set('PKLITE 1.15')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.50' and \
+            ctx.copier_subclass.val=='common+20' and \
+            ctx.decompr.segclass.val=='common':
+            ctx.createdby.set('PKLITE 1.50-2.01')
 
 def pkl_report(ctx):
     print('file:', ctx.infilename)
