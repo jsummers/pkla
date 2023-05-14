@@ -90,6 +90,7 @@ class context:
         ctx.entrypoint = pkla_number()
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
+        ctx.overlay = pkla_segment()
         ctx.overlay_size = pkla_number()
         ctx.createdby = pkla_string()
 
@@ -228,7 +229,16 @@ def pkl_read_exe(ctx):
         ctx.errmsg = "Truncated EXE file"
         return
 
+    if ctx.overlay_size.val > 0:
+        ctx.overlay.pos.set(ctx.codeend.val)
+
     ctx.ver_info.set(getu16(ctx, 28))
+
+def pkl_decode_overlay(ctx):
+    if ctx.overlay_size.val < 1:
+        return
+    if byte_seq_matches(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04', 0x3f):
+        ctx.overlay.segclass.set('ZIP')
 
 # Decode the first part of the executable code, and
 # find "position2": the position of the descrambler, or, if not scrambled,
@@ -731,8 +741,12 @@ def pkl_report(ctx):
     print('file size:', ctx.file_size.getvalpr())
     print('exe code start:', ctx.codestart.getvalpr())
     print('exe code end:', ctx.codeend.getvalpr())
+    if ctx.overlay_size.val > 0:
+        print('overlay pos:', ctx.overlay.pos.getvalpr())
     if ctx.overlay_size.val_known:
         print('overlay size:', ctx.overlay_size.getvalpr())
+    if ctx.overlay_size.val > 0:
+        print('overlay class:', ctx.overlay.segclass.getvalpr())
     print('exe entry point:', ctx.entrypoint.getvalpr())
     print('reported version info:', ctx.ver_info.getvalpr_hex())
     print('intro pos:', ctx.entrypoint.getvalpr())
@@ -823,6 +837,8 @@ def main():
     pkl_open_file(ctx)
     if ctx.errmsg=='':
         pkl_read_exe(ctx)
+    if ctx.errmsg=='':
+        pkl_decode_overlay(ctx)
     if ctx.errmsg=='':
         pkl_decode_intro(ctx)
     if ctx.errmsg=='':
