@@ -655,7 +655,40 @@ def pkl_fingerprint_extra(ctx):
         ctx.createdby.set('PKLITE 1.50-2.01 registered')
 
 def pkl_fingerprint_v120(ctx):
-    pass
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.14' and \
+            ctx.descrambler.segclass.val=='1.20var1' and \
+            ctx.copier_subclass.val=='1.20var1small+7' and \
+            ctx.decompr.segclass.val=='v120small':
+            if byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+306,
+                b'\xec\xd5\x14\x32\xc0\x09\x43\xe1\xc7\x11\x8d\xc2\xec\x72\xfc\xcc',
+                0xff):
+                ctx.createdby.set('ZIP2EXE 2.04c shareware')
+            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+306,
+                b'\x03\xf8\xd9\x18\x09\x43\xed\xcb\x15\x89\xc6\xcc\xbc\xf8\x7e\xf0',
+                0xff):
+                ctx.createdby.set('ZIP2EXE 2.04c registered')
+            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\x54\xb4\xc8\x5a\x9b\x6b\x46\x86\x67\x77\xcf\xdf\xce\x00\x00\x9f',
+                0xff):
+                ctx.createdby.set('ZIP2EXE 2.04e shareware')
+            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\xb3\xc9\x59\x9a\x64\x47\x85\x66\x70\xce\xdc\x00\x00\xdf\x80\x46',
+                0xff):
+                ctx.createdby.set('ZIP2EXE 2.04g shareware')
+            elif byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\xed\xf8\xb0\xa0\x5c\xf8\xb8\x28\x5c\xdc\x41\x00\x00\x80\x6c\xad',
+                0xff):
+                ctx.createdby.set('ZIP2EXE 2.04g registered')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.14' and \
+            ctx.descrambler.segclass.val=='1.20var1b' and \
+            ctx.copier_subclass.val=='1.20var1small+7' and \
+            ctx.decompr.segclass.val=='v120small':
+            if byte_seq_matches(ctx, ctx.start_of_cmpr_data.val+314,
+                b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22',
+                0xff):
+                ctx.createdby.set('ZIP2EXE 2.50 shareware')
 
 def pkl_fingerprint(ctx):
     if not ctx.v120_compression.val_known:
