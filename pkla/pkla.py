@@ -91,6 +91,7 @@ class context:
         ctx.overlay = pkla_segment()
         ctx.overlay_size = pkla_number()
         ctx.createdby = pkla_string()
+        ctx.fp_tags = []
 
         ctx.intro = pkla_segment()
         ctx.errorhandler = pkla_segment()
@@ -652,6 +653,10 @@ def pkl_scan_decompr2(ctx):
             if ok:
                 ctx.obfuscated_offsets.set(False)
 
+def check_fake_v120(ctx):
+    if bseq_exact(ctx, 30, b'PKLITE Copr. 1990-92 PKWARE'):
+        ctx.fp_tags.append('fake v1.20')
+
 def pkl_fingerprint_extra(ctx):
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.12' and \
@@ -660,12 +665,14 @@ def pkl_fingerprint_extra(ctx):
                 x = getbyte(ctx, ctx.decompr.pos.val+257)
                 if x==0xfa:
                     ctx.createdby.set('PKLITE 1.12 registered')
+                    check_fake_v120(ctx)
                 elif x==0x1e:
                     ctx.createdby.set('PKLITE 1.13 registered')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+223)
                 if x==0xfa:
                     ctx.createdby.set('PKLITE 1.12 registered')
+                    check_fake_v120(ctx)
                 elif x==0x1e:
                     ctx.createdby.set('PKLITE 1.13 registered')
     if not ctx.createdby.val_known:
@@ -717,6 +724,15 @@ def pkl_fingerprint_v120(ctx):
                 b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22'):
                 ctx.createdby.set('ZIP2EXE 2.50 shareware')
 
+def pkl_fingerprint_beta(ctx):
+    dsize = ctx.codeend.val - ctx.entrypoint.val
+    if ctx.large_compression.val:
+        if dsize==648 or dsize==545: # 545 = loadhigh
+            ctx.createdby.set('PKLITE 1.00beta')
+    else:
+        if dsize==468 or dsize==371: # 371 = loadhigh
+            ctx.createdby.set('PKLITE 1.00beta')
+
 def pkl_fingerprint(ctx):
     if not ctx.v120_compression.val_known:
         return
@@ -733,6 +749,9 @@ def pkl_fingerprint(ctx):
     if ctx.extra_compression.is_true():
         pkl_fingerprint_extra(ctx)
         return
+    if ctx.is_beta.is_true():
+        pkl_fingerprint_beta(ctx)
+        return
 
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.00' and \
@@ -748,12 +767,14 @@ def pkl_fingerprint(ctx):
                 x = getbyte(ctx, ctx.decompr.pos.val+254)
                 if x==0xfa:
                     ctx.createdby.set('PKLITE 1.12')
+                    check_fake_v120(ctx)
                 elif x==0x1e:
                     ctx.createdby.set('PKLITE 1.13')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+220)
                 if x==0xfa:
                     ctx.createdby.set('PKLITE 1.12')
+                    check_fake_v120(ctx)
                 elif x==0x1e:
                     ctx.createdby.set('PKLITE 1.13')
     if not ctx.createdby.val_known:
@@ -833,7 +854,10 @@ def pkl_report(ctx):
     if ctx.obfuscated_offsets.is_true():
         print(' offsets key:', ctx.offsets_key.getpr_hex1())
 
-    print('created by:', ctx.createdby.getpr())
+    print('created by:', ctx.createdby.getpr(), end='')
+    for x in ctx.fp_tags:
+        print('[%s]' % (x), end='')
+    print()
 
     #if ctx.decompr.pos.val_known and ctx.approx_end_of_decompressor.val_known:
     #    print('decompressor size:', ctx.approx_end_of_decompressor.val - \
