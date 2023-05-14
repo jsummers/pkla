@@ -18,8 +18,6 @@ class pkla_property:
     def set(self, x):
         self.val = x
         self.val_known = True
-    def get(self):
-        return self.val
     def is_true(self):
         if self.val_known and self.val:
             return True
@@ -40,22 +38,22 @@ class pkla_property:
             return True
         else:
             return False
-    def getvalpr(self):
+    def getpr(self):
         if self.val_known:
             return self.val
         else:
             return '?'
-    def getvalpr_hex(self):
+    def getpr_hex(self):
         if self.val_known:
             return '0x%04x' % (self.val)
         else:
             return '?'
-    def getvalpr_hex1(self):
+    def getpr_hex1(self):
         if self.val_known:
             return '0x%02x' % (self.val)
         else:
             return '?'
-    def getvalpr_yesno(self):
+    def getpr_yesno(self):
         if self.val_known:
             if self.val:
                 return 'yes'
@@ -143,7 +141,7 @@ def follow_1byte_jmp(ctx, pos):
     return pos + 1 + ctx.blob[pos]
 
 def ip_to_filepos(ctx, ip):
-    return ctx.codestart.get() + (ip - 0x0100)
+    return ctx.codestart.val + (ip - 0x0100)
 
 def bseq_match(ctx, pos1, vals, wildcard):
     if pos1+len(vals) > len(ctx.blob):
@@ -157,7 +155,7 @@ def bseq_match(ctx, pos1, vals, wildcard):
 
     return True
 
-def bseq_exact(ctx, pos1, vals, wildcard):
+def bseq_exact(ctx, pos1, vals):
     if pos1+len(vals) > len(ctx.blob):
         return False
 
@@ -231,10 +229,10 @@ def pkl_read_exe(ctx):
 
     ip = getu16(ctx, 20)
     cs = gets16(ctx, 22)
-    ctx.entrypoint.set(ctx.codestart.get() + 16*cs + ip)
+    ctx.entrypoint.set(ctx.codestart.val + 16*cs + ip)
 
-    if ctx.codeend.get() <= ctx.file_size.get():
-        ctx.overlay_size.set(ctx.file_size.get() - ctx.codeend.get())
+    if ctx.codeend.val <= ctx.file_size.val:
+        ctx.overlay_size.set(ctx.file_size.val - ctx.codeend.val)
     else:
         ctx.errmsg = "Truncated EXE file"
         return
@@ -247,7 +245,7 @@ def pkl_read_exe(ctx):
 def pkl_decode_overlay(ctx):
     if ctx.overlay_size.val < 1:
         return
-    if bseq_exact(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04', 0x3f):
+    if bseq_exact(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04'):
         ctx.overlay.segclass.set('ZIP')
 
 # Decode the first part of the executable code, and
@@ -255,7 +253,7 @@ def pkl_decode_overlay(ctx):
 # the position of the copier. This is usually right after the
 # "Not enough memory" message.
 def pkl_decode_intro(ctx):
-    pos = ctx.entrypoint.get()
+    pos = ctx.entrypoint.val
 
     if bseq_match(ctx, pos,
         b'\x2e\x8c\x1e??\x8b\x1e??\x8c\xda??????\x72', 0x3f):
@@ -310,7 +308,7 @@ def pkl_decode_intro(ctx):
         ctx.errmsg = 'Unknown PKLITE version, or not a PKLITE-compressed file'
 
     if ctx.intro.segclass.val_known:
-        ctx.intro.pos.set(ctx.entrypoint.get())
+        ctx.intro.pos.set(ctx.entrypoint.val)
         if not ctx.is_beta.val_known:
             ctx.is_beta.set(False)
 
@@ -331,7 +329,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     scrambled_count_raw = 0
     pos_of_endpos_field = 0
     pos_of_jmp_field = 0
-    pos = ctx.position2.get()
+    pos = ctx.position2.val
 
     if bseq_match(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
@@ -414,9 +412,9 @@ def pkl_detect_and_decode_descrambler(ctx):
 
     if ctx.is_scrambled.is_true():
         ctx.descrambler.pos.set(pos)
-    if ctx.scramble_algorithm.get()==2:
+    if ctx.scramble_algorithm.val==2:
         ctx.v120_compression.set(True)
-    elif ctx.scramble_algorithm.get()==1:
+    elif ctx.scramble_algorithm.val==1:
         ctx.v120_compression.set(False)
 
 def pkl_descramble(ctx):
@@ -435,7 +433,7 @@ def pkl_descramble(ctx):
     # The count is biased by 1. We set it to 1, meaning 0 scrambled words.
     putu16(ctx, 0x0001, ctx.pos_of_scrambled_word_count)
 
-    if ctx.scramble_algorithm.get()==2:
+    if ctx.scramble_algorithm.val==2:
         alg_ADD = True
     else:
         alg_ADD = False
@@ -445,7 +443,7 @@ def pkl_descramble(ctx):
         ctx.pos_of_last_scrambled_word+2, 2):
         n1 = getu16(ctx, i)
         if i==ctx.pos_of_last_scrambled_word:
-            n2 = ctx.initial_key.get()
+            n2 = ctx.initial_key.val
         else:
             n2 = getu16(ctx, i+2)
 
@@ -467,11 +465,11 @@ def pkl_descramble(ctx):
 # it to reliably find the start of the decompressor in the file.
 def pkl_decode_copier(ctx):
     if ctx.copier.pos.val_known:
-        pos = ctx.copier.pos.get()
+        pos = ctx.copier.pos.val
     elif ctx.is_scrambled.is_true():
-        pos = ctx.scrambled_section_startpos.get()
+        pos = ctx.scrambled_section_startpos.val
     else:
-        pos = ctx.position2.get()
+        pos = ctx.position2.val
 
     pos_of_decompr_pos_field = 0
     amt_to_scan = 60
@@ -515,11 +513,11 @@ def pkl_decode_copier(ctx):
             pos_of_decompr_pos_field = foundpos+7
 
     if found:
-        ctx.copier_subclass.set('%s+%d' % (ctx.copier.segclass.get(), \
+        ctx.copier_subclass.set('%s+%d' % (ctx.copier.segclass.val, \
             pos_of_decompr_pos_field-pos))
         ctx.copier.pos.set(pos)
         ctx.decompr.pos.set(ip_to_filepos(ctx, getu16(ctx, pos_of_decompr_pos_field)))
-        if ctx.copier.pos.get()==ctx.position2.get():
+        if ctx.copier.pos.val==ctx.position2.val:
             # We found the copier at 'position2', so
             # there's definitely no scrambled section.
             ctx.is_scrambled.set(False)
@@ -529,7 +527,7 @@ def pkl_decode_decompr(ctx):
     if not ctx.decompr.pos.val_known:
         return
 
-    pos = ctx.decompr.pos.get()
+    pos = ctx.decompr.pos.val
 
     if bseq_match(ctx, pos,
         b'\xfd\x8c\xdb\x53\x83\xc3', 0x3f):
@@ -558,12 +556,12 @@ def pkl_decode_decompr(ctx):
 
 def pkl_deduce_settings1(ctx):
     if (not ctx.start_of_cmpr_data.val_known) and ctx.is_beta.is_true():
-        ctx.start_of_cmpr_data.set(ctx.codestart.get())
+        ctx.start_of_cmpr_data.set(ctx.codestart.val)
 
     if ctx.is_beta.is_true():
-        ctx.approx_end_of_decompressor.set(ctx.codeend.get())
+        ctx.approx_end_of_decompressor.set(ctx.codeend.val)
     elif ctx.start_of_cmpr_data.val_known:
-        ctx.approx_end_of_decompressor.set(ctx.start_of_cmpr_data.get())
+        ctx.approx_end_of_decompressor.set(ctx.start_of_cmpr_data.val)
 
 def pkl_deduce_settings2(ctx):
     if ctx.v120_compression.is_true():
@@ -607,7 +605,7 @@ def pkl_scan_decompr2(ctx):
 
     # All files except v1.20 should have this pattern near the end of the
     # decompressor.
-    endpos = ctx.approx_end_of_decompressor.get()
+    endpos = ctx.approx_end_of_decompressor.val
     amt_to_scan = 60  # 38 or slightly more is probably sufficient
     startpos = endpos-amt_to_scan
     ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
@@ -640,7 +638,7 @@ def pkl_scan_decompr2(ctx):
         # d1 d3 80 eb 21 86 df fe c7 ac       8a d8 56 8b f7 2b f3 = not-obf.
         # d1 d3 80 eb 21 86 df fe c7 ac 34 ?  8a d8 56 8b f7 2b f3 = obf.off.
 
-        startpos = ctx.decompr.pos.get() + 200
+        startpos = ctx.decompr.pos.val + 200
         amt_to_scan = endpos - startpos
         ok, foundpos = find_bseq_match(ctx, startpos, amt_to_scan,
             b'\xac\x34?\x8a', 0x3f)
@@ -681,24 +679,19 @@ def pkl_fingerprint_v120(ctx):
             ctx.copier_subclass.val=='1.20var1small+7' and \
             ctx.decompr.segclass.val=='v120small':
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+306,
-                b'\xec\xd5\x14\x32\xc0\x09\x43\xe1\xc7\x11\x8d\xc2\xec\x72\xfc\xcc',
-                0xff):
+                b'\xec\xd5\x14\x32\xc0\x09\x43\xe1\xc7\x11\x8d\xc2\xec\x72\xfc\xcc'):
                 ctx.createdby.set('ZIP2EXE 2.04c shareware')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+306,
-                b'\x03\xf8\xd9\x18\x09\x43\xed\xcb\x15\x89\xc6\xcc\xbc\xf8\x7e\xf0',
-                0xff):
+                b'\x03\xf8\xd9\x18\x09\x43\xed\xcb\x15\x89\xc6\xcc\xbc\xf8\x7e\xf0'):
                 ctx.createdby.set('ZIP2EXE 2.04c registered')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
-                b'\x54\xb4\xc8\x5a\x9b\x6b\x46\x86\x67\x77\xcf\xdf\xce\x00\x00\x9f',
-                0xff):
+                b'\x54\xb4\xc8\x5a\x9b\x6b\x46\x86\x67\x77\xcf\xdf\xce\x00\x00\x9f'):
                 ctx.createdby.set('ZIP2EXE 2.04e shareware')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
-                b'\xb3\xc9\x59\x9a\x64\x47\x85\x66\x70\xce\xdc\x00\x00\xdf\x80\x46',
-                0xff):
+                b'\xb3\xc9\x59\x9a\x64\x47\x85\x66\x70\xce\xdc\x00\x00\xdf\x80\x46'):
                 ctx.createdby.set('ZIP2EXE 2.04g shareware')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
-                b'\xed\xf8\xb0\xa0\x5c\xf8\xb8\x28\x5c\xdc\x41\x00\x00\x80\x6c\xad',
-                0xff):
+                b'\xed\xf8\xb0\xa0\x5c\xf8\xb8\x28\x5c\xdc\x41\x00\x00\x80\x6c\xad'):
                 ctx.createdby.set('ZIP2EXE 2.04g registered')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
@@ -706,8 +699,7 @@ def pkl_fingerprint_v120(ctx):
             ctx.copier_subclass.val=='1.20var1small+7' and \
             ctx.decompr.segclass.val=='v120small':
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+314,
-                b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22',
-                0xff):
+                b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22'):
                 ctx.createdby.set('ZIP2EXE 2.50 shareware')
 
 def pkl_fingerprint(ctx):
@@ -748,66 +740,66 @@ def pkl_fingerprint(ctx):
 
 def pkl_report(ctx):
     print('file:', ctx.infilename)
-    print('file size:', ctx.file_size.getvalpr())
-    print('exe code start:', ctx.codestart.getvalpr())
-    print('exe code end:', ctx.codeend.getvalpr())
+    print('file size:', ctx.file_size.getpr())
+    print('exe code start:', ctx.codestart.getpr())
+    print('exe code end:', ctx.codeend.getpr())
     if ctx.overlay_size.val > 0:
-        print('overlay pos:', ctx.overlay.pos.getvalpr())
+        print('overlay pos:', ctx.overlay.pos.getpr())
     if ctx.overlay_size.val_known:
-        print('overlay size:', ctx.overlay_size.getvalpr())
+        print('overlay size:', ctx.overlay_size.getpr())
     if ctx.overlay_size.val > 0:
-        print('overlay class:', ctx.overlay.segclass.getvalpr())
-    print('exe entry point:', ctx.entrypoint.getvalpr())
-    print('reported version info:', ctx.ver_info.getvalpr_hex())
-    print('intro pos:', ctx.entrypoint.getvalpr())
+        print('overlay class:', ctx.overlay.segclass.getpr())
+    print('exe entry point:', ctx.entrypoint.getpr())
+    print('reported version info:', ctx.ver_info.getpr_hex())
+    print('intro pos:', ctx.entrypoint.getpr())
     print('intro class:', ctx.intro.segclass.val)
-    print('beta:', ctx.is_beta.getvalpr_yesno())
+    print('beta:', ctx.is_beta.getpr_yesno())
 
-    print('descrambler/copier pos:', ctx.position2.getvalpr())
+    print('descrambler/copier pos:', ctx.position2.getpr())
 
     if ctx.is_scrambled.is_true_or_unk():
-        print('descrambler pos:', ctx.descrambler.pos.getvalpr())
+        print('descrambler pos:', ctx.descrambler.pos.getpr())
         print('descrambler class:', ctx.descrambler.segclass.val)
 
-    print('copier pos:', ctx.copier.pos.getvalpr())
+    print('copier pos:', ctx.copier.pos.getpr())
     print('copier class:', ctx.copier.segclass.val)
     if ctx.copier_subclass.val_known:
-        print('copier subclass:', ctx.copier_subclass.getvalpr())
+        print('copier subclass:', ctx.copier_subclass.getpr())
 
-    print('error handler pos:', ctx.errorhandler.pos.getvalpr())
+    print('error handler pos:', ctx.errorhandler.pos.getpr())
     #print('error handler class:', ctx.errorhandler.segclass.val)
 
-    print('decompressor pos:', ctx.decompr.pos.getvalpr())
+    print('decompressor pos:', ctx.decompr.pos.getpr())
     print('decompressor class:', ctx.decompr.segclass.val)
 
-    print('scrambled:', ctx.is_scrambled.getvalpr_yesno())
+    print('scrambled:', ctx.is_scrambled.getpr_yesno())
     if ctx.is_scrambled.is_true_or_unk():
-        if ctx.scramble_algorithm.get()==1:
+        if ctx.scramble_algorithm.val==1:
             s = 'XOR'
-        elif ctx.scramble_algorithm.get()==2:
+        elif ctx.scramble_algorithm.val==2:
             s = 'ADD'
         else:
             s = '?'
         print(' scramble algorithm:', s)
-        print(' initial key:', ctx.initial_key.getvalpr_hex())
-        print(' scrambled section start:', ctx.scrambled_section_startpos.getvalpr())
+        print(' initial key:', ctx.initial_key.getpr_hex())
+        print(' scrambled section start:', ctx.scrambled_section_startpos.getpr())
         if ctx.is_scrambled.is_true() or ctx.scrambled_word_count>0:
             print(' num scrambled bytes:', ctx.scrambled_word_count*2)
         if ctx.pos_of_last_scrambled_word!=0:
             print(' scrambled end pos:', ctx.pos_of_last_scrambled_word+2)
         if ctx.previously_descrambled.is_true():
-            print(' previously descrambled:', ctx.previously_descrambled.getvalpr_yesno())
+            print(' previously descrambled:', ctx.previously_descrambled.getpr_yesno())
 
-    print('approx end of decompressor:', ctx.approx_end_of_decompressor.getvalpr())
-    print("start of cmpr data:", ctx.start_of_cmpr_data.getvalpr())
-    print('large:', ctx.large_compression.getvalpr_yesno())
-    print('extra:', ctx.extra_compression.getvalpr_yesno())
-    print('v1.20:', ctx.v120_compression.getvalpr_yesno())
-    print('obfuscated offsets:', ctx.obfuscated_offsets.getvalpr_yesno())
+    print('approx end of decompressor:', ctx.approx_end_of_decompressor.getpr())
+    print("start of cmpr data:", ctx.start_of_cmpr_data.getpr())
+    print('large:', ctx.large_compression.getpr_yesno())
+    print('extra:', ctx.extra_compression.getpr_yesno())
+    print('v1.20:', ctx.v120_compression.getpr_yesno())
+    print('obfuscated offsets:', ctx.obfuscated_offsets.getpr_yesno())
     if ctx.obfuscated_offsets.is_true():
-        print(' offsets key:', ctx.offsets_key.getvalpr_hex1())
+        print(' offsets key:', ctx.offsets_key.getpr_hex1())
 
-    print('created by:', ctx.createdby.getvalpr())
+    print('created by:', ctx.createdby.getpr())
 
     #if ctx.decompr.pos.val_known and ctx.approx_end_of_decompressor.val_known:
     #    print('decompressor size:', ctx.approx_end_of_decompressor.val - \
