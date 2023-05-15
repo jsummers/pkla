@@ -85,6 +85,7 @@ class context:
 
         ctx.file_size = pkla_number()
         ctx.ver_info = pkla_number()
+        ctx.ver_reported = pkla_number()
         ctx.entrypoint = pkla_number()
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
@@ -119,7 +120,8 @@ class context:
         ctx.extra_compression = pkla_bool()
         ctx.v120_compression = pkla_bool()
         ctx.obfuscated_offsets = pkla_bool()
-
+        ctx.has_pklite_checksum = pkla_bool()
+        ctx.pklite_checksum = pkla_number()
 
 def getbyte(ctx, offset):
     return ctx.blob[offset]
@@ -242,6 +244,7 @@ def pkl_read_exe(ctx):
         ctx.overlay.pos.set(ctx.codeend.val)
 
     ctx.ver_info.set(getu16(ctx, 28))
+    ctx.ver_reported.set(ctx.ver_info.val & 0x0fff)
 
 def pkl_decode_overlay(ctx):
     if ctx.overlay_size.val < 1:
@@ -600,9 +603,24 @@ def pkl_scan_decompr1(ctx):
     if ok:
         ctx.extra_compression.set(True)
 
+# Detect:
+# - large vs. small
+# - v1.20 compression
+# - offsets obfuscation
+# - etc.
 def pkl_scan_decompr2(ctx):
     if not ctx.approx_end_of_decompressor.val_known:
         return
+
+    startpos = ctx.decompr.pos.val
+    endpos = ctx.approx_end_of_decompressor.val
+    amt_to_scan = endpos - startpos
+    # TODO: Don't need to scan this much.
+    ok, foundpos = find_bseq_match(ctx, startpos, amt_to_scan,
+        b'\x3d??\x74?\x1f\xb4\x09\xba??\xcd\x21\xb8??\xcd\x21', 0x3f)
+    if ok:
+        ctx.has_pklite_checksum.set(True)
+        ctx.pklite_checksum.set(getu16(ctx, foundpos+1))
 
     # All files except v1.20 should have this pattern near the end of the
     # decompressor.
@@ -861,6 +879,10 @@ def pkl_report(ctx):
     print('obfuscated offsets:', ctx.obfuscated_offsets.getpr_yesno())
     if ctx.obfuscated_offsets.is_true():
         print(' offsets key:', ctx.offsets_key.getpr_hex1())
+    if ctx.has_pklite_checksum.val_known:
+        print('has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
+        if ctx.pklite_checksum.val_known:
+            print(' pklite checksum:', ctx.pklite_checksum.getpr_hex())
 
     print('created by:', ctx.createdby.getpr(), end='')
     for x in ctx.fp_tags:
