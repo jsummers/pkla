@@ -759,6 +759,17 @@ def pkl_fingerprint_beta(ctx):
         if dsize==468 or dsize==371: # 371 = loadhigh
             ctx.createdby.set('PKLITE 1.00beta')
 
+def pkl_fingerprint_100_103(ctx):
+    if not ctx.createdby.val_known:
+        if ctx.large_compression.val:
+            x = getbyte(ctx, ctx.copier.pos.val+17)
+            if x==0x22:
+                ctx.createdby.set('PKLITE 1.00')
+            elif x==0x23:
+                ctx.createdby.set('PKLITE 1.03')
+    if not ctx.createdby.val_known:
+        ctx.createdby.set('PKLITE 1.00-1.03')
+
 def pkl_fingerprint(ctx):
     if not ctx.v120_compression.val_known:
         return
@@ -783,7 +794,7 @@ def pkl_fingerprint(ctx):
         if ctx.intro.segclass.val=='1.00' and \
             ctx.copier_subclass.val=='common+23':
             if bseq_exact(ctx, ctx.decompr.pos.val+9, b'\xbe\xfe\xff'):
-                ctx.createdby.set('PKLITE 1.00-1.03')
+                pkl_fingerprint_100_103(ctx)
             elif bseq_exact(ctx, ctx.decompr.pos.val+9, b'\x8c\xcd'):
                 ctx.createdby.set('PKLITE 1.05')
     if not ctx.createdby.val_known:
