@@ -108,6 +108,7 @@ class context:
 
         ctx.is_scrambled = pkla_bool()
         ctx.previously_descrambled = pkla_bool()
+        ctx.initial_DX = pkla_number()
         ctx.initial_key = pkla_number()
         ctx.pos_of_scrambled_word_count = 0
         ctx.scrambled_word_count = 0
@@ -122,6 +123,7 @@ class context:
         ctx.obfuscated_offsets = pkla_bool()
         ctx.has_pklite_checksum = pkla_bool()
         ctx.pklite_checksum = pkla_number()
+        ctx.checksum_calc = pkla_number()
 
 def getbyte(ctx, offset):
     return ctx.blob[offset]
@@ -259,6 +261,11 @@ def pkl_decode_overlay(ctx):
 def pkl_decode_intro(ctx):
     pos = ctx.entrypoint.val
 
+    if bseq_match(ctx, pos, b'\xb8??\xba', 0x3f):
+        ctx.initial_DX.set(getu16(ctx, pos+4))
+    elif bseq_match(ctx, pos, b'\x50\xb8??\xba', 0x3f):
+        ctx.initial_DX.set(getu16(ctx, pos+5))
+
     if bseq_match(ctx, pos,
         b'\x2e\x8c\x1e??\x8b\x1e??\x8c\xda??????\x72', 0x3f):
         ctx.intro.segclass.set('beta')
@@ -276,25 +283,21 @@ def pkl_decode_intro(ctx):
     elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x73', 0x3f):
         ctx.intro.segclass.set("1.12")
-        ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+14))
         ctx.position2.set(pos+15)
     elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
         ctx.intro.segclass.set("1.14")
-        ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
         ctx.errorhandler.pos.set(pos+15)
     elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x05\x00\x00\x3b\x2d\x73\x67\x72', 0x3f):
         ctx.intro.segclass.set("megalite")
-        ctx.initial_key.set(getu16(ctx, pos+4))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
         ctx.errorhandler.pos.set(pos+15)
     elif bseq_match(ctx, pos,
         b'\x50\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
         ctx.intro.segclass.set("1.50")
-        ctx.initial_key.set(getu16(ctx, pos+5))
         ctx.position2.set(follow_1byte_jmp(ctx, pos+15))
         ctx.errorhandler.pos.set(pos+16)
     elif bseq_match(ctx, pos,
@@ -307,6 +310,9 @@ def pkl_decode_intro(ctx):
     elif bseq_match(ctx, pos,
         b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4', 0x3f):
         ctx.intro.segclass.set("un2pack_corrupt")
+
+    if (not ctx.initial_key.val_known) and ctx.initial_DX.val_known:
+        ctx.initial_key.set(ctx.initial_DX.val)
 
     if not ctx.intro.segclass.val_known:
         ctx.errmsg = 'Unknown PKLITE version, or not a PKLITE-compressed file'
@@ -671,6 +677,27 @@ def pkl_scan_decompr2(ctx):
             if ok:
                 ctx.obfuscated_offsets.set(False)
 
+# The checksum is of the compressed data (not the decompressed data),
+# including the compressed relocation table and the footer.
+# My assumption is that in files with a checksum, the checksummed data
+# both starts and ends at a file position that is a multiple of 16
+# bytes. Such files add padding to the footer, if needed, to make this
+# true.
+def pkl_test_checksum(ctx):
+    if not ctx.pklite_checksum.val_known:
+        return
+    if not ctx.initial_DX.val_known:
+        return
+    if not ctx.start_of_cmpr_data.val_known:
+        return
+
+    num_checksummed_words = (ctx.initial_DX.val * 16) // 2
+    cksum = 0
+    for i in range(num_checksummed_words):
+        cksum += getu16(ctx, ctx.start_of_cmpr_data.val + 2*i)
+        cksum = cksum % 65536
+    ctx.checksum_calc.set(cksum)
+
 def check_fake_v120(ctx):
     if bseq_exact(ctx, 30, b'PKLITE Copr. 1990-92 PKWARE'):
         ctx.fp_tags.append('fake v1.20')
@@ -831,7 +858,6 @@ def pkl_fingerprint(ctx):
             ctx.createdby.set('PKLITE 1.50-2.01')
 
 def pkl_report(ctx):
-    print('file:', ctx.infilename)
     print('file size:', ctx.file_size.getpr())
     print('exe code start:', ctx.codestart.getpr())
     print('exe code end:', ctx.codeend.getpr())
@@ -894,6 +920,7 @@ def pkl_report(ctx):
         print('has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
         if ctx.pklite_checksum.val_known:
             print(' pklite checksum:', ctx.pklite_checksum.getpr_hex())
+        print(' calculated checksum:', ctx.checksum_calc.getpr_hex())
 
     print('created by:', ctx.createdby.getpr(), end='')
     for x in ctx.fp_tags:
@@ -935,6 +962,7 @@ def main():
         print('Without <outfile>, just analyzes.')
         return
 
+    print('file:', ctx.infilename)
     pkl_open_file(ctx)
     if ctx.errmsg=='':
         pkl_read_exe(ctx)
@@ -956,6 +984,8 @@ def main():
     if ctx.errmsg=='':
         pkl_scan_decompr2(ctx)
     pkl_deduce_settings2(ctx)
+    if ctx.errmsg=='':
+        pkl_test_checksum(ctx)
     if ctx.errmsg=='':
         pkl_fingerprint(ctx)
     pkl_report(ctx)
