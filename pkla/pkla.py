@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2023.05.10.00
+# Version 2023.05.17+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE file, and
@@ -92,7 +92,7 @@ class context:
         ctx.overlay = pkla_segment()
         ctx.overlay_size = pkla_number()
         ctx.createdby = pkla_string()
-        ctx.fp_tags = []
+        ctx.tags = []
 
         ctx.intro = pkla_segment()
         ctx.errorhandler = pkla_segment()
@@ -700,7 +700,7 @@ def pkl_test_checksum(ctx):
 
 def check_fake_v120(ctx):
     if bseq_exact(ctx, 30, b'PKLITE Copr. 1990-92 PKWARE'):
-        ctx.fp_tags.append('fake v1.20')
+        ctx.tags.append('fake v1.20')
 
 def pkl_fingerprint_extra(ctx):
     if not ctx.createdby.val_known:
@@ -922,10 +922,11 @@ def pkl_report(ctx):
             print(' pklite checksum:', ctx.pklite_checksum.getpr_hex())
         print(' calculated checksum:', ctx.checksum_calc.getpr_hex())
 
-    print('created by:', ctx.createdby.getpr(), end='')
-    for x in ctx.fp_tags:
-        print('[%s]' % (x), end='')
-    print()
+    print('created by:', ctx.createdby.getpr())
+    if len(ctx.tags) > 0:
+        print('tags: [', end='')
+        print('] ['.join(ctx.tags), end='')
+        print(']')
 
     #if ctx.decompr.pos.val_known and ctx.approx_end_of_decompressor.val_known:
     #    print('decompressor size:', ctx.approx_end_of_decompressor.val - \
