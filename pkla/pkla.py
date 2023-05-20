@@ -92,11 +92,14 @@ class context:
         ctx.errmsg = ''
 
         ctx.file_size = pkla_number()
+        ctx.entrypoint = pkla_number()
         ctx.ver_info = pkla_number()
         ctx.ver_reported = pkla_number()
-        ctx.entrypoint = pkla_number()
+        ctx.reloc_tbl_end = 0
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
+        ctx.orighdrcopy_pos = pkla_number()
+        ctx.orighdrcopy_size = pkla_number()
         ctx.overlay = pkla_segment()
         ctx.overlay_size = pkla_number()
         ctx.createdby = pkla_string()
@@ -232,6 +235,7 @@ def pkl_read_exe(ctx):
     e_cblp = getu16(ctx, 2)
     e_cp = getu16(ctx, 4)
 
+    num_relocs = getu16(ctx, 6)
     e_cparhdr = getu16(ctx, 8)
     ctx.codestart.set(e_cparhdr*16)
 
@@ -243,6 +247,9 @@ def pkl_read_exe(ctx):
     ip = getu16(ctx, 20)
     cs = gets16(ctx, 22)
     ctx.entrypoint.set(ctx.codestart.val + 16*cs + ip)
+
+    reloc_tbl_start = getu16(ctx, 24)
+    ctx.reloc_tbl_end = reloc_tbl_start + 4*num_relocs
 
     if ctx.codeend.val <= ctx.file_size.val:
         ctx.overlay_size.set(ctx.file_size.val - ctx.codeend.val)
@@ -685,6 +692,14 @@ def pkl_scan_decompr2(ctx):
             if ok:
                 ctx.obfuscated_offsets.set(False)
 
+def pkl_look_for_orighdrcopy(ctx):
+    if ctx.extra_compression.is_true_or_unk():
+        return
+    ctx.orighdrcopy_pos.set(ctx.reloc_tbl_end)
+    orighdr_reloc_tbl_pos = getu16(ctx, ctx.orighdrcopy_pos.val+22)
+    ctx.orighdrcopy_size.set(orighdr_reloc_tbl_pos-2)
+    # TODO: Try to detect bad headers.
+
 # The checksum is of the compressed data (not the decompressed data),
 # including the compressed relocation table and the footer.
 # My assumption is that in files with a checksum, the checksummed data
@@ -875,6 +890,12 @@ def pkl_report(ctx):
         print('overlay size:', ctx.overlay_size.getpr())
     if ctx.overlay_size.val > 0:
         print('overlay class:', ctx.overlay.segclass.getpr())
+
+    if ctx.extra_compression.is_false_or_unk():
+        print('copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
+        if ctx.orighdrcopy_pos.val_known:
+            print('copy-of-orig-header size:', ctx.orighdrcopy_size.getpr())
+
     print('exe entry point:', ctx.entrypoint.getpr())
     print('reported version info:', ctx.ver_info.getpr_hex())
     print('intro pos:', ctx.entrypoint.getpr())
@@ -994,6 +1015,8 @@ def main():
         pkl_scan_decompr1(ctx)
     if ctx.errmsg=='':
         pkl_scan_decompr2(ctx)
+    if ctx.errmsg=='':
+        pkl_look_for_orighdrcopy(ctx)
     pkl_deduce_settings2(ctx)
     if ctx.errmsg=='':
         pkl_test_checksum(ctx)
