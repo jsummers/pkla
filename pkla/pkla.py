@@ -61,6 +61,14 @@ class pkla_property:
                 return 'no'
         else:
             return '?'
+    def getpr_withrel(self, ctx):
+        if self.val_known:
+            if self.val >= ctx.entrypoint.val:
+                return '%d (e%+d)' % (self.val, self.val-ctx.entrypoint.val)
+            else:
+                return '%d (c%+d)' % (self.val, self.val-ctx.codestart.val)
+        else:
+            return '?'
 
 class pkla_bool(pkla_property):
     def __init__(self):
@@ -873,21 +881,21 @@ def pkl_report(ctx):
     print('intro class:', ctx.intro.segclass.val)
     print('beta:', ctx.is_beta.getpr_yesno())
 
-    print('descrambler/copier pos:', ctx.position2.getpr())
+    print('descrambler/copier pos:', ctx.position2.getpr_withrel(ctx))
 
     if ctx.is_scrambled.is_true_or_unk():
-        print('descrambler pos:', ctx.descrambler.pos.getpr())
+        print('descrambler pos:', ctx.descrambler.pos.getpr_withrel(ctx))
         print('descrambler class:', ctx.descrambler.segclass.val)
 
-    print('copier pos:', ctx.copier.pos.getpr())
+    print('copier pos:', ctx.copier.pos.getpr_withrel(ctx))
     print('copier class:', ctx.copier.segclass.val)
     if ctx.copier_subclass.val_known:
         print('copier subclass:', ctx.copier_subclass.getpr())
 
-    print('error handler pos:', ctx.errorhandler.pos.getpr())
+    print('error handler pos:', ctx.errorhandler.pos.getpr_withrel(ctx))
     #print('error handler class:', ctx.errorhandler.segclass.val)
 
-    print('decompressor pos:', ctx.decompr.pos.getpr())
+    print('decompressor pos:', ctx.decompr.pos.getpr_withrel(ctx))
     print('decompressor class:', ctx.decompr.segclass.val)
 
     print('scrambled:', ctx.is_scrambled.getpr_yesno())
@@ -900,16 +908,18 @@ def pkl_report(ctx):
             s = '?'
         print(' scramble algorithm:', s)
         print(' initial key:', ctx.initial_key.getpr_hex())
-        print(' scrambled section start:', ctx.scrambled_section_startpos.getpr())
+        print(' scrambled section start:', ctx.scrambled_section_startpos.getpr_withrel(ctx))
         if ctx.is_scrambled.is_true() or ctx.scrambled_word_count>0:
             print(' num scrambled bytes:', ctx.scrambled_word_count*2)
         if ctx.pos_of_last_scrambled_word!=0:
-            print(' scrambled end pos:', ctx.pos_of_last_scrambled_word+2)
+            s_e_p = pkla_number()
+            s_e_p.set(ctx.pos_of_last_scrambled_word+2)
+            print(' scrambled end pos:', s_e_p.getpr_withrel(ctx))
         if ctx.previously_descrambled.is_true():
             print(' previously descrambled:', ctx.previously_descrambled.getpr_yesno())
 
-    print('approx end of decompressor:', ctx.approx_end_of_decompressor.getpr())
-    print("start of cmpr data:", ctx.start_of_cmpr_data.getpr())
+    print('approx end of decompressor:', ctx.approx_end_of_decompressor.getpr_withrel(ctx))
+    print("start of cmpr data:", ctx.start_of_cmpr_data.getpr_withrel(ctx))
     print('large:', ctx.large_compression.getpr_yesno())
     print('extra:', ctx.extra_compression.getpr_yesno())
     print('v1.20:', ctx.v120_compression.getpr_yesno())
