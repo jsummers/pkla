@@ -102,6 +102,7 @@ class context:
         ctx.reloc_tbl_end = 0
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
+        ctx.has_orighdrcopy = pkla_bool()
         ctx.orighdrcopy_pos = pkla_number()
         ctx.orighdrcopy_size = pkla_number()
         ctx.overlay = pkla_segment()
@@ -697,12 +698,44 @@ def pkl_scan_decompr2(ctx):
                 ctx.obfuscated_offsets.set(False)
 
 def pkl_look_for_orighdrcopy(ctx):
+    if ctx.extra_compression.is_true():
+        ctx.has_orighdrcopy.set(False)
+        return
     if ctx.extra_compression.is_true_or_unk():
         return
+
+    ctx.has_orighdrcopy.set(False)  # Default
+
+    if ctx.codestart.val - ctx.reloc_tbl_end < 26:
+        return
+
     ctx.orighdrcopy_pos.set(ctx.reloc_tbl_end)
     orighdr_reloc_tbl_pos = getu16(ctx, ctx.orighdrcopy_pos.val+22)
     ctx.orighdrcopy_size.set(orighdr_reloc_tbl_pos-2)
-    # TODO: Try to detect bad headers.
+
+    if ctx.orighdrcopy_size.val < 26:
+        return
+
+    if ctx.orighdrcopy_pos.val + ctx.orighdrcopy_size.val > \
+        ctx.codestart.val:
+        return
+
+    # Check bytes-in-last-paragraph
+    n = getu16(ctx, ctx.orighdrcopy_pos.val)
+    if n>511:
+        return
+
+    # Number of 512-byte blocks
+    n = getu16(ctx, ctx.orighdrcopy_pos.val+2)
+    if n<1:
+        return
+
+    # Header size, in 16-byte units
+    n = getu16(ctx, ctx.orighdrcopy_pos.val+6)
+    if n<2:
+        return
+
+    ctx.has_orighdrcopy.set(True)
 
 # The checksum is of the compressed data (not the decompressed data),
 # including the compressed relocation table and the footer.
@@ -895,10 +928,11 @@ def pkl_report(ctx):
     if ctx.overlay_size.val > 0:
         print('overlay class:', ctx.overlay.segclass.getpr())
 
-    if ctx.extra_compression.is_false_or_unk():
-        print('copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
+    print('has copy-or-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
+    if ctx.has_orighdrcopy.is_true():
+        print(' copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
         if ctx.orighdrcopy_pos.val_known:
-            print('copy-of-orig-header size:', ctx.orighdrcopy_size.getpr())
+            print(' copy-of-orig-header size:', ctx.orighdrcopy_size.getpr())
 
     print('exe entry point:', ctx.entrypoint.getpr())
     print('reported version info:', ctx.ver_info.getpr_hex())
