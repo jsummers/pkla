@@ -928,7 +928,7 @@ def pkl_report(ctx):
     if ctx.overlay_size.val > 0:
         print('overlay class:', ctx.overlay.segclass.getpr())
 
-    print('has copy-or-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
+    print('has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
     if ctx.has_orighdrcopy.is_true():
         print(' copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
         if ctx.orighdrcopy_pos.val_known:
@@ -957,7 +957,7 @@ def pkl_report(ctx):
     print('decompressor pos:', ctx.decompr.pos.getpr_withrel(ctx))
     print('decompressor class:', ctx.decompr.segclass.val)
 
-    print('scrambled:', ctx.is_scrambled.getpr_yesno())
+    print('scrambled decompressor:', ctx.is_scrambled.getpr_yesno())
     if ctx.is_scrambled.is_true_or_unk():
         if ctx.scramble_algorithm.val==1:
             s = 'XOR'
@@ -977,6 +977,15 @@ def pkl_report(ctx):
         if ctx.previously_descrambled.is_true():
             print(' previously descrambled:', ctx.previously_descrambled.getpr_yesno())
 
+    reloc_tbl_cmpr_method = pkla_string()
+    if ctx.extra_compression.is_true():
+        if ctx.scramble_algorithm.val==2:
+            reloc_tbl_cmpr_method.set('extra/reversed')
+        else:
+            reloc_tbl_cmpr_method.set('extra')
+    elif ctx.extra_compression.is_false():
+        reloc_tbl_cmpr_method.set('normal')
+
     print('approx end of decompressor:', ctx.approx_end_of_decompressor.getpr_withrel(ctx))
     print("start of cmpr data:", ctx.start_of_cmpr_data.getpr_withrel(ctx))
     print('large:', ctx.large_compression.getpr_yesno())
@@ -985,6 +994,7 @@ def pkl_report(ctx):
     print('obfuscated offsets:', ctx.obfuscated_offsets.getpr_yesno())
     if ctx.obfuscated_offsets.is_true():
         print(' offsets key:', ctx.offsets_key.getpr_hex1())
+    print('reloc table format:', reloc_tbl_cmpr_method.val)
     if ctx.has_pklite_checksum.val_known:
         print('has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
         if ctx.pklite_checksum.val_known:
