@@ -63,8 +63,11 @@ class pkla_property:
             return '?'
     def getpr_withrel(self, ctx):
         if self.val_known:
+            rel_pos = self.val-ctx.entrypoint.val
+            # The "ctx.ip+" part prints the offset part of the likely load
+            # address. Useful if using a disassembler.
             if self.val >= ctx.entrypoint.val:
-                return '%d (e%+d)' % (self.val, self.val-ctx.entrypoint.val)
+                return '%d (e%+d, :%04x)' % (self.val, rel_pos, ctx.ip+rel_pos)
             else:
                 return '%d (c%+d)' % (self.val, self.val-ctx.codestart.val)
         else:
@@ -95,6 +98,7 @@ class context:
         ctx.entrypoint = pkla_number()
         ctx.ver_info = pkla_number()
         ctx.ver_reported = pkla_number()
+        ctx.ip = 0
         ctx.reloc_tbl_end = 0
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
@@ -244,9 +248,9 @@ def pkl_read_exe(ctx):
     else:
         ctx.codeend.set(512 * (e_cp-1) + e_cblp)
 
-    ip = getu16(ctx, 20)
+    ctx.ip = getu16(ctx, 20)
     cs = gets16(ctx, 22)
-    ctx.entrypoint.set(ctx.codestart.val + 16*cs + ip)
+    ctx.entrypoint.set(ctx.codestart.val + 16*cs + ctx.ip)
 
     reloc_tbl_start = getu16(ctx, 24)
     ctx.reloc_tbl_end = reloc_tbl_start + 4*num_relocs
@@ -898,7 +902,7 @@ def pkl_report(ctx):
 
     print('exe entry point:', ctx.entrypoint.getpr())
     print('reported version info:', ctx.ver_info.getpr_hex())
-    print('intro pos:', ctx.entrypoint.getpr())
+    print('intro pos:', ctx.entrypoint.getpr_withrel(ctx))
     print('intro class:', ctx.intro.segclass.val)
     print('beta:', ctx.is_beta.getpr_yesno())
 
