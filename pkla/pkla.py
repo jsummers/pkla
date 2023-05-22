@@ -138,6 +138,7 @@ class context:
         ctx.v120_compression = pkla_bool()
         ctx.obfuscated_offsets = pkla_bool()
         ctx.has_pklite_checksum = pkla_bool()
+        ctx.num_checksummed_bytes = pkla_number()
         ctx.pklite_checksum = pkla_number()
         ctx.checksum_calc = pkla_number()
 
@@ -752,6 +753,7 @@ def pkl_test_checksum(ctx):
         return
 
     num_checksummed_words = (ctx.initial_DX.val * 16) // 2
+    ctx.num_checksummed_bytes.set(num_checksummed_words*2)
     cksum = 0
     for i in range(num_checksummed_words):
         cksum += getu16(ctx, ctx.start_of_cmpr_data.val + 2*i)
@@ -918,46 +920,54 @@ def pkl_fingerprint(ctx):
             ctx.createdby.set('PKLITE 1.50-2.01')
 
 def pkl_report(ctx):
-    print('file size:', ctx.file_size.getpr())
-    print('exe code start:', ctx.codestart.getpr())
-    print('exe code end:', ctx.codeend.getpr())
-    if ctx.overlay_size.val > 0:
-        print('overlay pos:', ctx.overlay.pos.getpr())
-    if ctx.overlay_size.val_known:
-        print('overlay size:', ctx.overlay_size.getpr())
-    if ctx.overlay_size.val > 0:
-        print('overlay class:', ctx.overlay.segclass.getpr())
+    if ctx.include_prefixes:
+        p_INFO = 'INFO: ' # Not needed.
+        p_LOW  = 'LOW : ' # Might have *some* use.
+        p_MED  = 'MED : ' # Useful for best results.
+        p_HIGH = 'HIGH: ' # Needed to decompress to a runnable file.
+        p_CRIT = 'CRIT: ' # Needed to decompress the code image.
+    else:
+        p_INFO = ''
+        p_LOW  = ''
+        p_MED  = ''
+        p_HIGH = ''
+        p_CRIT = ''
 
-    print('has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
+    print(p_INFO+'file size:', ctx.file_size.getpr())
+    print(p_INFO+'code start:', ctx.codestart.getpr())
+    print(p_INFO+'code end:', ctx.codeend.getpr())
+
+    has_overlay = pkla_bool()
+    if ctx.overlay_size.val > 0:
+        has_overlay.set(True)
+    else:
+        has_overlay.set(False)
+
+    print(p_MED+'has overlay:', has_overlay.getpr_yesno())
+    if ctx.overlay_size.val > 0:
+        print(p_MED+' overlay pos:', ctx.overlay.pos.getpr())
+        print(p_MED+' overlay size:', ctx.overlay_size.getpr())
+        print(p_LOW+' overlay class:', ctx.overlay.segclass.getpr())
+
+    print(p_MED+'has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
     if ctx.has_orighdrcopy.is_true():
-        print(' copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
+        print(p_MED+' copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
         if ctx.orighdrcopy_pos.val_known:
-            print(' copy-of-orig-header size:', ctx.orighdrcopy_size.getpr())
+            print(p_MED+' copy-of-orig-header size:', ctx.orighdrcopy_size.getpr())
 
-    print('exe entry point:', ctx.entrypoint.getpr())
-    print('reported version info:', ctx.ver_info.getpr_hex())
-    print('intro pos:', ctx.entrypoint.getpr_withrel(ctx))
-    print('intro class:', ctx.intro.segclass.val)
-    print('beta:', ctx.is_beta.getpr_yesno())
+    print(p_INFO+'exe entry point:', ctx.entrypoint.getpr())
+    print(p_INFO+'reported version info:', ctx.ver_info.getpr_hex())
+    print(p_INFO+'intro pos:', ctx.entrypoint.getpr_withrel(ctx))
+    print(p_INFO+'intro class:', ctx.intro.segclass.val)
+    print(p_INFO+'beta:', ctx.is_beta.getpr_yesno())
 
-    print('descrambler/copier pos:', ctx.position2.getpr_withrel(ctx))
+    print(p_INFO+'descrambler/copier pos:', ctx.position2.getpr_withrel(ctx))
 
     if ctx.is_scrambled.is_true_or_unk():
-        print('descrambler pos:', ctx.descrambler.pos.getpr_withrel(ctx))
-        print('descrambler class:', ctx.descrambler.segclass.val)
+        print(p_INFO+'descrambler pos:', ctx.descrambler.pos.getpr_withrel(ctx))
+        print(p_INFO+'descrambler class:', ctx.descrambler.segclass.val)
 
-    print('copier pos:', ctx.copier.pos.getpr_withrel(ctx))
-    print('copier class:', ctx.copier.segclass.val)
-    if ctx.copier_subclass.val_known:
-        print('copier subclass:', ctx.copier_subclass.getpr())
-
-    print('error handler pos:', ctx.errorhandler.pos.getpr_withrel(ctx))
-    #print('error handler class:', ctx.errorhandler.segclass.val)
-
-    print('decompressor pos:', ctx.decompr.pos.getpr_withrel(ctx))
-    print('decompressor class:', ctx.decompr.segclass.val)
-
-    print('scrambled decompressor:', ctx.is_scrambled.getpr_yesno())
+    print(p_INFO+'scrambled decompressor:', ctx.is_scrambled.getpr_yesno())
     if ctx.is_scrambled.is_true_or_unk():
         if ctx.scramble_algorithm.val==1:
             s = 'XOR'
@@ -965,17 +975,27 @@ def pkl_report(ctx):
             s = 'ADD'
         else:
             s = '?'
-        print(' scramble algorithm:', s)
-        print(' initial key:', ctx.initial_key.getpr_hex())
-        print(' scrambled section start:', ctx.scrambled_section_startpos.getpr_withrel(ctx))
+        print(p_INFO+' scramble algorithm:', s)
+        print(p_INFO+' initial key:', ctx.initial_key.getpr_hex())
+        print(p_INFO+' scrambled section start:', ctx.scrambled_section_startpos.getpr_withrel(ctx))
         if ctx.is_scrambled.is_true() or ctx.scrambled_word_count>0:
-            print(' num scrambled bytes:', ctx.scrambled_word_count*2)
+            print(p_INFO+' num scrambled bytes:', ctx.scrambled_word_count*2)
         if ctx.pos_of_last_scrambled_word!=0:
             s_e_p = pkla_number()
             s_e_p.set(ctx.pos_of_last_scrambled_word+2)
-            print(' scrambled end pos:', s_e_p.getpr_withrel(ctx))
+            print(p_INFO+' scrambled end pos:', s_e_p.getpr_withrel(ctx))
         if ctx.previously_descrambled.is_true():
-            print(' previously descrambled:', ctx.previously_descrambled.getpr_yesno())
+            print(p_INFO+' previously descrambled:', ctx.previously_descrambled.getpr_yesno())
+
+    print(p_INFO+'copier pos:', ctx.copier.pos.getpr_withrel(ctx))
+    print(p_INFO+'copier class:', ctx.copier.segclass.val)
+    if ctx.copier_subclass.val_known:
+        print(p_INFO+'copier subclass:', ctx.copier_subclass.getpr())
+
+    print(p_INFO+'error handler pos:', ctx.errorhandler.pos.getpr_withrel(ctx))
+
+    print(p_INFO+'decompressor pos:', ctx.decompr.pos.getpr_withrel(ctx))
+    print(p_INFO+'decompressor class:', ctx.decompr.segclass.val)
 
     reloc_tbl_cmpr_method = pkla_string()
     if ctx.extra_compression.is_true():
@@ -986,24 +1006,25 @@ def pkl_report(ctx):
     elif ctx.extra_compression.is_false():
         reloc_tbl_cmpr_method.set('normal')
 
-    print('approx end of decompressor:', ctx.approx_end_of_decompressor.getpr_withrel(ctx))
-    print("start of cmpr data:", ctx.start_of_cmpr_data.getpr_withrel(ctx))
-    print('large:', ctx.large_compression.getpr_yesno())
-    print('extra:', ctx.extra_compression.getpr_yesno())
-    print('v1.20:', ctx.v120_compression.getpr_yesno())
-    print('obfuscated offsets:', ctx.obfuscated_offsets.getpr_yesno())
+    print(p_INFO+'approx end of decompressor:', \
+        ctx.approx_end_of_decompressor.getpr_withrel(ctx))
+    print(p_CRIT+'start of cmpr data:', ctx.start_of_cmpr_data.getpr_withrel(ctx))
+    print(p_CRIT+'large:', ctx.large_compression.getpr_yesno())
+    print(p_CRIT+'extra:', ctx.extra_compression.getpr_yesno())
+    print(p_CRIT+'v1.20:', ctx.v120_compression.getpr_yesno())
+    print(p_CRIT+'obfuscated offsets:', ctx.obfuscated_offsets.getpr_yesno())
     if ctx.obfuscated_offsets.is_true():
-        print(' offsets key:', ctx.offsets_key.getpr_hex1())
-    print('reloc table format:', reloc_tbl_cmpr_method.val)
+        print(p_CRIT+' offsets key:', ctx.offsets_key.getpr_hex1())
+    print(p_HIGH+'reloc table format:', reloc_tbl_cmpr_method.val)
     if ctx.has_pklite_checksum.val_known:
-        print('has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
-        if ctx.pklite_checksum.val_known:
-            print(' pklite checksum:', ctx.pklite_checksum.getpr_hex())
-        print(' calculated checksum:', ctx.checksum_calc.getpr_hex())
+        print(p_INFO+'has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
+        print(p_INFO+' num checksummed bytes:', ctx.num_checksummed_bytes.getpr())
+        print(p_INFO+' reported pklite checksum:', ctx.pklite_checksum.getpr_hex())
+        print(p_INFO+' calculated pklite checksum:', ctx.checksum_calc.getpr_hex())
 
-    print('created by:', ctx.createdby.getpr())
+    print(p_INFO+'created by:', ctx.createdby.getpr())
     if len(ctx.tags) > 0:
-        print('tags: [', end='')
+        print(p_LOW+'tags: [', end='')
         print('] ['.join(ctx.tags), end='')
         print(']')
 
@@ -1041,6 +1062,8 @@ def main():
         print('With <outfile>, descrambles.')
         print('Without <outfile>, just analyzes.')
         return
+
+    ctx.include_prefixes = False
 
     print('file:', ctx.infilename)
     pkl_open_file(ctx)
