@@ -133,6 +133,7 @@ class context:
         ctx.scramble_algorithm = pkla_number()
 
         ctx.is_beta = pkla_bool()
+        ctx.load_high = pkla_bool()
         ctx.large_compression = pkla_bool()
         ctx.extra_compression = pkla_bool()
         ctx.v120_compression = pkla_bool()
@@ -295,6 +296,7 @@ def pkl_decode_intro(ctx):
         b'\x2e\x8c\x1e??\xfc\x8c\xc8', 0x3f):
         ctx.intro.segclass.set("beta_lh")
         ctx.is_beta.set(True)
+        ctx.load_high.set(True)
     elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x8c\xdb\x03\xd8\x3b\x1e\x02\x00\x73', 0x3f):
         ctx.intro.segclass.set("1.00")
@@ -342,6 +344,8 @@ def pkl_decode_intro(ctx):
         ctx.intro.pos.set(ctx.entrypoint.val)
         if not ctx.is_beta.val_known:
             ctx.is_beta.set(False)
+        if not ctx.load_high.val_known:
+            ctx.load_high.set(False)
 
 # Decide if scrambling is used.
 # If so, figure out the scrambling params.
@@ -960,6 +964,7 @@ def pkl_report(ctx):
     print(p_INFO+'intro pos:', ctx.entrypoint.getpr_withrel(ctx))
     print(p_INFO+'intro class:', ctx.intro.segclass.val)
     print(p_INFO+'beta:', ctx.is_beta.getpr_yesno())
+    print(p_LOW+'load-high:', ctx.load_high.getpr_yesno())
 
     print(p_INFO+'descrambler/copier pos:', ctx.position2.getpr_withrel(ctx))
 
@@ -1045,25 +1050,36 @@ def pkl_write_descrambled(ctx):
     outf.close()
     print("** Use this descrambled file AT YOUR OWN RISK. **")
 
+def usage():
+    print('usage: <pkla.py> <infile> [<outfile>]')
+    print('With <outfile>, descrambles.')
+    print('Without <outfile>, just analyzes.')
+    return
+
 def main():
     ctx = context()
-
-    if len(sys.argv)==2:
-        ctx.infilename = sys.argv[1]
-        ctx.want_descrambled = False
-    elif len(sys.argv)==3:
-        ctx.infilename = sys.argv[1]
-        ctx.outfilename = sys.argv[2]
-        if ctx.outfilename==ctx.infilename:
-            raise Exception("Filenames are the same")
-        ctx.want_descrambled = True
-    else:
-        print('usage: <pkla.py> <infile> [<outfile>]')
-        print('With <outfile>, descrambles.')
-        print('Without <outfile>, just analyzes.')
-        return
-
     ctx.include_prefixes = False
+    ctx.want_descrambled = False
+
+    xcount = 0
+    for a1 in range(1, len(sys.argv)):
+        arg = sys.argv[a1]
+        if arg[0:1]=='-':
+            if arg=='-p':
+                ctx.include_prefixes = True
+            continue
+        xcount += 1
+        if xcount==1:
+            ctx.infilename = arg
+        elif xcount==2:
+            ctx.outfilename = arg
+            ctx.want_descrambled = True
+            if ctx.outfilename==ctx.infilename:
+                raise Exception("Filenames are the same")
+
+    if xcount!=1 and xcount!=2:
+        usage()
+        return
 
     print('file:', ctx.infilename)
     pkl_open_file(ctx)
