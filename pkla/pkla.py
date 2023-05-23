@@ -775,29 +775,29 @@ def pkl_fingerprint_extra(ctx):
             if ctx.large_compression.val:
                 x = getbyte(ctx, ctx.decompr.pos.val+257)
                 if x==0xfa:
-                    ctx.createdby.set('PKLITE 1.12 registered')
+                    ctx.createdby.set('PKLITE Professional 1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
-                    ctx.createdby.set('PKLITE 1.13 registered')
+                    ctx.createdby.set('PKLITE Professional 1.13')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+223)
                 if x==0xfa:
-                    ctx.createdby.set('PKLITE 1.12 registered')
+                    ctx.createdby.set('PKLITE Professional 1.12 ')
                     check_fake_v120(ctx)
                 elif x==0x1e:
-                    ctx.createdby.set('PKLITE 1.13 registered')
+                    ctx.createdby.set('PKLITE Professional 1.13')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='common+10' and \
             ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE 1.14 registered')
+            ctx.createdby.set('PKLITE Professional 1.14')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='common+10' and \
             ctx.decompr.segclass.val=='1.15':
-            ctx.createdby.set('PKLITE 1.15 registered')
+            ctx.createdby.set('PKLITE Professional 1.15')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.50' and \
             ctx.descrambler.segclass.val=='1.50scrambled' and \
@@ -811,7 +811,12 @@ def pkl_fingerprint_extra(ctx):
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='1.50scrambled+14' and \
             ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE 1.50-2.01 registered')
+            ctx.createdby.set('PKLITE Professional 1.50-2.01')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='1.00' and \
+            ctx.copier_subclass.val=='common+23' and \
+            ctx.decompr.segclass.val=='common':
+            ctx.createdby.set('PKLITE Professional 1.00-1.05')
 
 def pkl_fingerprint_v120(ctx):
     if not ctx.createdby.val_known:
