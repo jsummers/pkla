@@ -317,6 +317,7 @@ def pkl_decode_intro(ctx):
         b'\xb8??\xba??\x05\x00\x00\x3b\x2d\x73\x67\x72', 0x3f):
         ctx.intro.segclass.set("megalite")
         ctx.position2.set(follow_1byte_jmp(ctx, pos+14))
+        ctx.tags.append('MEGALITE')
         ctx.errorhandler.pos.set(pos+15)
     elif bseq_match(ctx, pos,
         b'\x50\xb8??\xba??\x05\x00\x00\x3b\x06\x02\x00\x72', 0x3f):
@@ -330,9 +331,11 @@ def pkl_decode_intro(ctx):
         ctx.is_scrambled.set(False)
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+18+15))
         ctx.position2.set(pos+18+16)
+        ctx.tags.append('UN2PACK 2')
     elif bseq_match(ctx, pos,
         b'\x9c\xba??\x2d??\x81\xe1??\x81\xf3??\xb4', 0x3f):
         ctx.intro.segclass.set("un2pack_corrupt")
+        ctx.tags.append('UN2PACK 2')
 
     if (not ctx.initial_key.val_known) and ctx.initial_DX.val_known:
         ctx.initial_key.set(ctx.initial_DX.val)
@@ -768,6 +771,54 @@ def check_fake_v120(ctx):
     if bseq_exact(ctx, 30, b'PKLITE Copr. 1990-92 PKWARE'):
         ctx.tags.append('fake v1.20')
 
+def pkl_fingerprint_100_to_105(ctx):
+    if ctx.intro.segclass.val=='1.00' and \
+        ctx.copier_subclass.val=='common+23' and \
+        ctx.decompr.segclass.val=='common':
+        pass
+    else:
+        return
+
+    if ctx.extra_compression.is_true():
+        prod = 'PKLITE Professional '
+    else:
+        prod = 'PKLITE '
+
+    if bseq_exact(ctx, ctx.decompr.pos.val+9, b'\xbe\xfe\xff'):
+        # 1.00 or 1.03. If large mode, we can tell which.
+        if ctx.large_compression.val:
+            x = getbyte(ctx, ctx.copier.pos.val+17)
+            if x==0x22:
+                ctx.createdby.set(prod+'1.00')
+            elif x==0x23:
+                ctx.createdby.set(prod+'1.03')
+        if not ctx.createdby.val_known:
+            ctx.createdby.set(prod+'1.00-1.03')
+
+    if ctx.createdby.val_known:
+        return
+
+    if bseq_exact(ctx, ctx.decompr.pos.val+9, b'\x8c\xcd'):
+        # 1.05, or an earlier version patched by LOWFIX
+        if ctx.large_compression.is_true() and \
+            bseq_exact(ctx, ctx.decompr.pos.val+51, b'\x75\xed\x90'):
+            x = getbyte(ctx, ctx.copier.pos.val+17)
+            if x==0x22:
+                ctx.createdby.set(prod+'1.00')
+            elif x==0x23:
+                ctx.createdby.set(prod+'1.03')
+            ctx.tags.append('patched by LOWFIX')
+
+        if not ctx.createdby.val_known:
+            ctx.createdby.set(prod+'1.05')
+            if bseq_exact(ctx, ctx.decompr.pos.val+51, b'\x75\xed\xfc'):
+                ctx.tags.append('patched by LOWFIX')
+            elif ctx.large_compression.is_false() and \
+                ctx.ver_reported.val==0x106:
+                # File was really made by PKLITE 1.00-1.03, but converted to
+                # v1.05 format by LOWFIX.
+                ctx.tags.append('upgraded by LOWFIX')
+
 def pkl_fingerprint_extra(ctx):
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.12' and \
@@ -813,10 +864,7 @@ def pkl_fingerprint_extra(ctx):
             ctx.decompr.segclass.val=='common':
             ctx.createdby.set('PKLITE Professional 1.50-2.01')
     if not ctx.createdby.val_known:
-        if ctx.intro.segclass.val=='1.00' and \
-            ctx.copier_subclass.val=='common+23' and \
-            ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE Professional 1.00-1.05')
+        pkl_fingerprint_100_to_105(ctx)
 
 def pkl_fingerprint_v120(ctx):
     if not ctx.createdby.val_known:
@@ -857,17 +905,6 @@ def pkl_fingerprint_beta(ctx):
         if dsize==468 or dsize==371: # 371 = loadhigh
             ctx.createdby.set('PKLITE 1.00beta')
 
-def pkl_fingerprint_100_103(ctx):
-    if not ctx.createdby.val_known:
-        if ctx.large_compression.val:
-            x = getbyte(ctx, ctx.copier.pos.val+17)
-            if x==0x22:
-                ctx.createdby.set('PKLITE 1.00')
-            elif x==0x23:
-                ctx.createdby.set('PKLITE 1.03')
-    if not ctx.createdby.val_known:
-        ctx.createdby.set('PKLITE 1.00-1.03')
-
 def pkl_fingerprint(ctx):
     if not ctx.v120_compression.val_known:
         return
@@ -889,12 +926,7 @@ def pkl_fingerprint(ctx):
         return
 
     if not ctx.createdby.val_known:
-        if ctx.intro.segclass.val=='1.00' and \
-            ctx.copier_subclass.val=='common+23':
-            if bseq_exact(ctx, ctx.decompr.pos.val+9, b'\xbe\xfe\xff'):
-                pkl_fingerprint_100_103(ctx)
-            elif bseq_exact(ctx, ctx.decompr.pos.val+9, b'\x8c\xcd'):
-                ctx.createdby.set('PKLITE 1.05')
+        pkl_fingerprint_100_to_105(ctx)
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.12' and \
             ctx.copier_subclass.val=='common+20':
