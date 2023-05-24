@@ -22,7 +22,6 @@ TODO:
 * Support COM format. Easy, but low priority.
 * Better names for some of the segment "classes".
 * Better support for beta-version files.
-* Detect the version of PKLITE (or ZIP2EXE) that made the file.
 
 Not planned:
 * Decompression, or any feature that would require it.

@@ -792,6 +792,12 @@ def pkl_fingerprint_100_to_105(ctx):
                 ctx.createdby.set(prod+'1.00')
             elif x==0x23:
                 ctx.createdby.set(prod+'1.03')
+        else:
+            if ctx.ver_reported.val==0x100:
+                ctx.createdby.set(prod+'1.00')
+            elif ctx.ver_reported.val==0x103:
+                ctx.createdby.set(prod+'1.03')
+
         if not ctx.createdby.val_known:
             ctx.createdby.set(prod+'1.00-1.03')
 
@@ -820,35 +826,37 @@ def pkl_fingerprint_100_to_105(ctx):
                 ctx.tags.append('upgraded by LOWFIX')
 
 def pkl_fingerprint_extra(ctx):
+    prod = 'PKLITE Professional '
+
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.12' and \
             ctx.copier_subclass.val=='common+20':
             if ctx.large_compression.val:
                 x = getbyte(ctx, ctx.decompr.pos.val+257)
                 if x==0xfa:
-                    ctx.createdby.set('PKLITE Professional 1.12')
+                    ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
-                    ctx.createdby.set('PKLITE Professional 1.13')
+                    ctx.createdby.set(prod+'1.13')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+223)
                 if x==0xfa:
-                    ctx.createdby.set('PKLITE Professional 1.12 ')
+                    ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
-                    ctx.createdby.set('PKLITE Professional 1.13')
+                    ctx.createdby.set(prod+'1.13')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='common+10' and \
             ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE Professional 1.14')
+            ctx.createdby.set(prod+'1.14')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='common+10' and \
             ctx.decompr.segclass.val=='1.15':
-            ctx.createdby.set('PKLITE Professional 1.15')
+            ctx.createdby.set(prod+'1.15')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.50' and \
             ctx.descrambler.segclass.val=='1.50scrambled' and \
@@ -862,7 +870,13 @@ def pkl_fingerprint_extra(ctx):
             ctx.is_scrambled.is_true() and \
             ctx.copier_subclass.val=='1.50scrambled+14' and \
             ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE Professional 1.50-2.01')
+            if ctx.ver_reported.val==0x132:
+                ctx.createdby.set(prod+'1.50')
+            elif ctx.ver_reported.val==0x201:
+                ctx.createdby.set(prod+'2.01')
+            else:
+                ctx.createdby.set(prod+'1.50-2.01')
+
     if not ctx.createdby.val_known:
         pkl_fingerprint_100_to_105(ctx)
 
@@ -925,6 +939,7 @@ def pkl_fingerprint(ctx):
         pkl_fingerprint_beta(ctx)
         return
 
+    prod = 'PKLITE '
     if not ctx.createdby.val_known:
         pkl_fingerprint_100_to_105(ctx)
     if not ctx.createdby.val_known:
@@ -933,32 +948,37 @@ def pkl_fingerprint(ctx):
             if ctx.large_compression.val:
                 x = getbyte(ctx, ctx.decompr.pos.val+254)
                 if x==0xfa:
-                    ctx.createdby.set('PKLITE 1.12')
+                    ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
-                    ctx.createdby.set('PKLITE 1.13')
+                    ctx.createdby.set(prod+'1.13')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+220)
                 if x==0xfa:
-                    ctx.createdby.set('PKLITE 1.12')
+                    ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
-                    ctx.createdby.set('PKLITE 1.13')
+                    ctx.createdby.set(prod+'1.13')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.copier_subclass.val=='common+18' and \
             ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE 1.14')
+            ctx.createdby.set(prod+'1.14')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.copier_subclass.val=='common+19' and \
             ctx.decompr.segclass.val=='1.15':
-            ctx.createdby.set('PKLITE 1.15')
+            ctx.createdby.set(prod+'1.15')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.50' and \
             ctx.copier_subclass.val=='common+20' and \
             ctx.decompr.segclass.val=='common':
-            ctx.createdby.set('PKLITE 1.50-2.01')
+            if ctx.ver_reported.val==0x132:
+                ctx.createdby.set(prod+'1.50')
+            elif ctx.ver_reported.val==0x201:
+                ctx.createdby.set(prod+'2.01')
+            else:
+                ctx.createdby.set(prod+'1.50-2.01')
 
 def pkl_report(ctx):
     if ctx.include_prefixes:
