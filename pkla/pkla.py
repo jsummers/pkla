@@ -95,6 +95,8 @@ class context:
         ctx.errmsg = ''
 
         ctx.file_size = pkla_number()
+        ctx.is_exe = pkla_bool()
+        ctx.is_pklite = pkla_bool()
         ctx.entrypoint = pkla_number()
         ctx.ver_info = pkla_number()
         ctx.ver_reported = pkla_number()
@@ -238,6 +240,7 @@ def pkl_read_exe(ctx):
     if sig!=0x5a4d and sig!=0x4d5a:
         ctx.errmsg = "Not an EXE file"
         return
+    ctx.is_exe.set(True)
 
     e_cblp = getu16(ctx, 2)
     e_cp = getu16(ctx, 4)
@@ -344,6 +347,7 @@ def pkl_decode_intro(ctx):
         ctx.errmsg = 'Unknown PKLITE version, or not a PKLITE-compressed file'
 
     if ctx.intro.segclass.val_known:
+        ctx.is_pklite.set(True)
         ctx.intro.pos.set(ctx.entrypoint.val)
         if not ctx.is_beta.val_known:
             ctx.is_beta.set(False)
@@ -980,21 +984,7 @@ def pkl_fingerprint(ctx):
             else:
                 ctx.createdby.set(prod+'1.50-2.01')
 
-def pkl_report(ctx):
-    if ctx.include_prefixes:
-        ctx.p_INFO = 'INFO: ' # Not needed.
-        ctx.p_LOW  = 'LOW : ' # Might have *some* use.
-        ctx.p_MED  = 'MED : ' # Useful for best results.
-        ctx.p_HIGH = 'HIGH: ' # Needed to decompress to a runnable file.
-        ctx.p_CRIT = 'CRIT: ' # Needed to decompress the code image.
-    else:
-        ctx.p_INFO = ''
-        ctx.p_LOW  = ''
-        ctx.p_MED  = ''
-        ctx.p_HIGH = ''
-        ctx.p_CRIT = ''
-
-    print(ctx.p_INFO+'file size:', ctx.file_size.getpr())
+def report_exe_specific(ctx):
     print(ctx.p_INFO+'code start:', ctx.codestart.getpr())
     print(ctx.p_INFO+'code end:', ctx.codeend.getpr())
     print(ctx.p_INFO+'exe entry point:', ctx.entrypoint.getpr())
@@ -1011,6 +1001,7 @@ def pkl_report(ctx):
         print(ctx.p_MED+' overlay size:', ctx.overlay_size.getpr())
         print(ctx.p_LOW+' overlay class:', ctx.overlay.segclass.getpr())
 
+def report_pklite_specific(ctx):
     print(ctx.p_INFO+'reported version info:', ctx.ver_info.getpr_hex())
 
     print(ctx.p_MED+'has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
@@ -1091,9 +1082,26 @@ def pkl_report(ctx):
         print('] ['.join(ctx.tags), end='')
         print(']')
 
-    #if ctx.decompr.pos.val_known and ctx.approx_end_of_decompressor.val_known:
-    #    print('decompressor size:', ctx.approx_end_of_decompressor.val - \
-    #        ctx.decompr.pos.val)
+def pkl_report(ctx):
+    if ctx.include_prefixes:
+        ctx.p_INFO = 'INFO: ' # Not needed.
+        ctx.p_LOW  = 'LOW : ' # Might have *some* use.
+        ctx.p_MED  = 'MED : ' # Useful for best results.
+        ctx.p_HIGH = 'HIGH: ' # Needed to decompress to a runnable file.
+        ctx.p_CRIT = 'CRIT: ' # Needed to decompress the code image.
+    else:
+        ctx.p_INFO = ''
+        ctx.p_LOW  = ''
+        ctx.p_MED  = ''
+        ctx.p_HIGH = ''
+        ctx.p_CRIT = ''
+
+    print(ctx.p_INFO+'file size:', ctx.file_size.getpr())
+
+    if ctx.is_exe.is_true():
+        report_exe_specific(ctx)
+    if ctx.is_pklite.is_true():
+        report_pklite_specific(ctx)
 
 def pkl_write_descrambled(ctx):
     if ctx.is_scrambled.is_false_or_unk():
