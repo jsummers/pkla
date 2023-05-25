@@ -997,6 +997,7 @@ def pkl_report(ctx):
     print(p_INFO+'file size:', ctx.file_size.getpr())
     print(p_INFO+'code start:', ctx.codestart.getpr())
     print(p_INFO+'code end:', ctx.codeend.getpr())
+    print(p_INFO+'exe entry point:', ctx.entrypoint.getpr())
 
     has_overlay = pkla_bool()
     if ctx.overlay_size.val > 0:
@@ -1010,15 +1011,15 @@ def pkl_report(ctx):
         print(p_MED+' overlay size:', ctx.overlay_size.getpr())
         print(p_LOW+' overlay class:', ctx.overlay.segclass.getpr())
 
+    print(p_INFO+'reported version info:', ctx.ver_info.getpr_hex())
+
     print(p_MED+'has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
     if ctx.has_orighdrcopy.is_true():
         print(p_MED+' copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
         if ctx.orighdrcopy_pos.val_known:
             print(p_MED+' copy-of-orig-header size:', ctx.orighdrcopy_size.getpr())
 
-    print(p_INFO+'exe entry point:', ctx.entrypoint.getpr())
-    print(p_INFO+'reported version info:', ctx.ver_info.getpr_hex())
-    print(p_INFO+'intro pos:', ctx.entrypoint.getpr_withrel(ctx))
+    print(p_INFO+'intro pos:', ctx.intro.pos.getpr_withrel(ctx))
     print(p_INFO+'intro class:', ctx.intro.segclass.val)
     print(p_INFO+'beta:', ctx.is_beta.getpr_yesno())
     print(p_LOW+'load-high:', ctx.load_high.getpr_yesno())
