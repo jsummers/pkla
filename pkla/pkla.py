@@ -1173,10 +1173,10 @@ def pkl_write_descrambled(ctx):
     print("** Use this descrambled file AT YOUR OWN RISK. **")
 
 def usage():
-    print('usage: <pkla.py> <infile> [<outfile>]')
-    print('With <outfile>, descrambles.')
-    print('Without <outfile>, just analyzes.')
-    return
+    print('usage: pkla.py [options] <infile>')
+    print('       pkla.py -s <infile> <outfile>')
+    print(' options: -p  Print item importance')
+    print('          -s  "Descramble" the obfuscated part of a file')
 
 def main():
     ctx = context()
@@ -1189,19 +1189,25 @@ def main():
         if arg[0:1]=='-':
             if arg=='-p':
                 ctx.include_prefixes = True
+            if arg=='-s':
+                ctx.want_descrambled = True
             continue
         xcount += 1
         if xcount==1:
             ctx.infilename = arg
         elif xcount==2:
             ctx.outfilename = arg
-            ctx.want_descrambled = True
             if ctx.outfilename==ctx.infilename:
                 raise Exception("Filenames are the same")
 
-    if xcount!=1 and xcount!=2:
-        usage()
-        return
+    if ctx.want_descrambled:
+        if xcount!=2:
+            usage()
+            return
+    else:
+        if xcount!=1:
+            usage()
+            return
 
     print('file:', ctx.infilename)
     pkl_open_file(ctx)
