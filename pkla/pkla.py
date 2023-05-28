@@ -94,9 +94,12 @@ class context:
     def __init__(ctx):
         ctx.errmsg = ''
 
-        ctx.file_size = pkla_number()
         ctx.is_exe = pkla_bool()
         ctx.is_pklite = pkla_bool()
+        ctx.is_pklite_win3x = False
+        ctx.is_pklite_com = False
+
+        ctx.file_size = pkla_number()
         ctx.entrypoint = pkla_number()
         ctx.ver_info = pkla_number()
         ctx.ver_reported = pkla_number()
@@ -235,13 +238,31 @@ def pkl_open_file(ctx):
     inf.close()
     ctx.file_size.set(len(ctx.blob))
 
-def pkl_read_exe(ctx):
-    sig = getu16(ctx, 0)
-    if sig!=0x5a4d and sig!=0x4d5a:
-        ctx.errmsg = "Not an EXE file"
-        return
-    ctx.is_exe.set(True)
+def is_win3x_pklite_format(ctx):
+    if not bseq_exact(ctx, 66, b'PKlite('):
+        return False
+    # TODO: Better detection
+    return True
 
+def detect_pklite_com(ctx):
+    if bseq_match(ctx, 0, b'\xb8??\xba??\x3b\xc4?\x67', 0x3f):
+        ctx.ver_info_pos = 44 # 1.00-1.14
+        ctx.com_data_pos = 448
+    elif bseq_match(ctx, 0, b'\xb8??\xba??\x3b\xc4?\x69', 0x3f):
+        ctx.ver_info_pos = 46 # 1.15
+        ctx.com_data_pos = 450
+    elif bseq_match(ctx, 0, b'\x50\xb8??\xba??\x3b', 0x3f):
+        ctx.ver_info_pos = 46 # 1.50-2.01
+        ctx.com_data_pos = 464
+    elif bseq_match(ctx, 0, b'\xba??\xa1??\x2d\x20', 0x3f):
+        ctx.ver_info_pos = 36 # beta
+        ctx.com_data_pos = 500
+
+    if ctx.ver_info_pos>0:
+        return True
+    return False
+
+def pkl_read_exe(ctx):
     e_cblp = getu16(ctx, 2)
     e_cp = getu16(ctx, 4)
 
@@ -261,6 +282,16 @@ def pkl_read_exe(ctx):
     reloc_tbl_start = getu16(ctx, 24)
     ctx.reloc_tbl_end = reloc_tbl_start + 4*num_relocs
 
+    ctx.is_pklite_win3x = is_win3x_pklite_format(ctx)
+
+    if ctx.is_pklite_win3x:
+        ctx.is_pklite.set(True)
+        ctx.ver_info_pos = 64
+        ctx.errmsg = "Windows EXE files are not supported"
+        return
+
+    ctx.ver_info_pos = 28
+
     if ctx.codeend.val <= ctx.file_size.val:
         ctx.overlay_size.set(ctx.file_size.val - ctx.codeend.val)
     else:
@@ -270,8 +301,25 @@ def pkl_read_exe(ctx):
     if ctx.overlay_size.val > 0:
         ctx.overlay.pos.set(ctx.codeend.val)
 
-    ctx.ver_info.set(getu16(ctx, 28))
-    ctx.ver_reported.set(ctx.ver_info.val & 0x0fff)
+# Determine the file format, and read non-PKLITE-specific data
+def pkl_read_main(ctx):
+    ctx.ver_info_pos = 0
+    sig = getu16(ctx, 0)
+    n = getbyte(ctx, 3)
+    if (sig==0x5a4d or sig==0x4d5a) and (n<=1):
+        ctx.is_exe.set(True)
+        pkl_read_exe(ctx)
+    elif detect_pklite_com(ctx):
+        ctx.is_pklite.set(True)
+        ctx.is_pklite_com = True
+        ctx.errmsg = "COM files are not supported"
+    else:
+        ctx.errmsg = "Not a supported file format"
+        return
+
+    if ctx.ver_info_pos>0:
+        ctx.ver_info.set(getu16(ctx, ctx.ver_info_pos))
+        ctx.ver_reported.set(ctx.ver_info.val & 0x0fff)
 
 def pkl_decode_overlay(ctx):
     if ctx.overlay_size.val < 1:
@@ -989,6 +1037,9 @@ def report_exe_specific(ctx):
     print(ctx.p_INFO+'code end:', ctx.codeend.getpr())
     print(ctx.p_INFO+'exe entry point:', ctx.entrypoint.getpr())
 
+    if ctx.is_pklite_win3x:
+        return
+
     has_overlay = pkla_bool()
     if ctx.overlay_size.val > 0:
         has_overlay.set(True)
@@ -1003,6 +1054,11 @@ def report_exe_specific(ctx):
 
 def report_pklite_specific(ctx):
     print(ctx.p_INFO+'reported version info:', ctx.ver_info.getpr_hex())
+
+    if ctx.is_pklite_win3x:
+        return
+    if ctx.is_pklite_com:
+        return
 
     print(ctx.p_MED+'has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
     if ctx.has_orighdrcopy.is_true():
@@ -1150,7 +1206,7 @@ def main():
     print('file:', ctx.infilename)
     pkl_open_file(ctx)
     if ctx.errmsg=='':
-        pkl_read_exe(ctx)
+        pkl_read_main(ctx)
     if ctx.errmsg=='':
         pkl_decode_overlay(ctx)
     if ctx.errmsg=='':
