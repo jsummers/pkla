@@ -63,10 +63,12 @@ class pkla_property:
             return '?'
     def getpr_withrel(self, ctx):
         if self.val_known:
-            rel_pos = self.val-ctx.entrypoint.val
             # The "ctx.ip+" part prints the offset part of the likely load
             # address. Useful if using a disassembler.
-            if self.val >= ctx.entrypoint.val:
+            if not ctx.is_exe.val:
+                return '%d (:%04x)' % (self.val, 0x0100+self.val)
+            elif self.val >= ctx.entrypoint.val:
+                rel_pos = self.val-ctx.entrypoint.val
                 return '%d (e%+d, :%04x)' % (self.val, rel_pos, ctx.ip+rel_pos)
             else:
                 return '%d (c%+d)' % (self.val, self.val-ctx.codestart.val)
@@ -96,8 +98,8 @@ class context:
 
         ctx.is_exe = pkla_bool()
         ctx.is_pklite = pkla_bool()
-        ctx.is_pklite_win3x = False
-        ctx.is_pklite_com = False
+        # "DOS EXE" "Win3 EXE" "DOS COM"
+        ctx.executable_fmt = pkla_string()
 
         ctx.file_size = pkla_number()
         ctx.entrypoint = pkla_number()
@@ -247,16 +249,16 @@ def is_win3x_pklite_format(ctx):
 def detect_pklite_com(ctx):
     if bseq_match(ctx, 0, b'\xb8??\xba??\x3b\xc4?\x67', 0x3f):
         ctx.ver_info_pos = 44 # 1.00-1.14
-        ctx.com_data_pos = 448
+        ctx.start_of_cmpr_data.set(448)
     elif bseq_match(ctx, 0, b'\xb8??\xba??\x3b\xc4?\x69', 0x3f):
         ctx.ver_info_pos = 46 # 1.15
-        ctx.com_data_pos = 450
+        ctx.start_of_cmpr_data.set(450)
     elif bseq_match(ctx, 0, b'\x50\xb8??\xba??\x3b', 0x3f):
         ctx.ver_info_pos = 46 # 1.50-2.01
-        ctx.com_data_pos = 464
+        ctx.start_of_cmpr_data.set(464)
     elif bseq_match(ctx, 0, b'\xba??\xa1??\x2d\x20', 0x3f):
         ctx.ver_info_pos = 36 # beta
-        ctx.com_data_pos = 500
+        ctx.start_of_cmpr_data.set(500)
 
     if ctx.ver_info_pos>0:
         return True
@@ -282,9 +284,12 @@ def pkl_read_exe(ctx):
     reloc_tbl_start = getu16(ctx, 24)
     ctx.reloc_tbl_end = reloc_tbl_start + 4*num_relocs
 
-    ctx.is_pklite_win3x = is_win3x_pklite_format(ctx)
+    if is_win3x_pklite_format(ctx):
+        ctx.executable_fmt.set('Win3 EXE')
+    else:
+        ctx.executable_fmt.set('DOS EXE')
 
-    if ctx.is_pklite_win3x:
+    if ctx.executable_fmt.val=='Win3 EXE':
         ctx.is_pklite.set(True)
         ctx.ver_info_pos = 64
         ctx.errmsg = "Windows EXE files are not supported"
@@ -303,6 +308,7 @@ def pkl_read_exe(ctx):
 
 # Determine the file format, and read non-PKLITE-specific data
 def pkl_read_main(ctx):
+    ctx.is_pklite.set(False) # Default
     ctx.ver_info_pos = 0
     sig = getu16(ctx, 0)
     n = getbyte(ctx, 3)
@@ -311,8 +317,7 @@ def pkl_read_main(ctx):
         pkl_read_exe(ctx)
     elif detect_pklite_com(ctx):
         ctx.is_pklite.set(True)
-        ctx.is_pklite_com = True
-        ctx.errmsg = "COM files are not supported"
+        ctx.executable_fmt.set('DOS COM')
     else:
         ctx.errmsg = "Not a supported file format"
         return
@@ -327,12 +332,27 @@ def pkl_decode_overlay(ctx):
     if bseq_exact(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04'):
         ctx.overlay.segclass.set('ZIP')
 
+def pkl_decode_intro_COM(ctx):
+    ctx.large_compression.set(False)
+    ctx.extra_compression.set(False)
+    ctx.is_scrambled.set(False)
+    ctx.v120_compression.set(False)
+    ctx.obfuscated_offsets.set(False)
+    ctx.intro.pos.set(0)
+
 # Decode the first part of the executable code, and
 # find "position2": the position of the descrambler, or, if not scrambled,
 # the position of the copier. This is usually right after the
 # "Not enough memory" message.
 def pkl_decode_intro(ctx):
     pos = ctx.entrypoint.val
+
+    if ctx.executable_fmt.val=='DOS COM':
+        pkl_decode_intro_COM(ctx)
+        return
+
+    if ctx.is_exe.is_false_or_unk():
+        return
 
     if bseq_match(ctx, pos, b'\xb8??\xba', 0x3f):
         ctx.initial_DX.set(getu16(ctx, pos+4))
@@ -1037,7 +1057,7 @@ def report_exe_specific(ctx):
     print(ctx.p_INFO+'code end:', ctx.codeend.getpr())
     print(ctx.p_INFO+'exe entry point:', ctx.entrypoint.getpr())
 
-    if ctx.is_pklite_win3x:
+    if ctx.executable_fmt.val=='Win3 EXE':
         return
 
     has_overlay = pkla_bool()
@@ -1055,12 +1075,11 @@ def report_exe_specific(ctx):
 def report_pklite_specific(ctx):
     print(ctx.p_INFO+'reported version info:', ctx.ver_info.getpr_hex())
 
-    if ctx.is_pklite_win3x:
-        return
-    if ctx.is_pklite_com:
+    if ctx.executable_fmt.val=='Win3 EXE':
         return
 
-    print(ctx.p_MED+'has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
+    if ctx.is_exe.is_true():
+        print(ctx.p_MED+'has copy-of-orig-header:', ctx.has_orighdrcopy.getpr_yesno())
     if ctx.has_orighdrcopy.is_true():
         print(ctx.p_MED+' copy-of-orig-header pos:', ctx.orighdrcopy_pos.getpr())
         if ctx.orighdrcopy_pos.val_known:
@@ -1125,7 +1144,8 @@ def report_pklite_specific(ctx):
     print(ctx.p_CRIT+'obfuscated offsets:', ctx.obfuscated_offsets.getpr_yesno())
     if ctx.obfuscated_offsets.is_true():
         print(ctx.p_CRIT+' offsets key:', ctx.offsets_key.getpr_hex1())
-    print(ctx.p_HIGH+'reloc table format:', reloc_tbl_cmpr_method.val)
+    if ctx.is_exe.is_true_or_unk():
+        print(ctx.p_HIGH+'reloc table format:', reloc_tbl_cmpr_method.val)
     if ctx.has_pklite_checksum.val_known:
         print(ctx.p_INFO+'has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
         print(ctx.p_INFO+' num checksummed bytes:', ctx.num_checksummed_bytes.getpr())
@@ -1153,6 +1173,9 @@ def pkl_report(ctx):
         ctx.p_CRIT = ''
 
     print(ctx.p_INFO+'file size:', ctx.file_size.getpr())
+
+    print(ctx.p_CRIT+'PKLITE detected:', ctx.is_pklite.getpr_yesno())
+    print(ctx.p_HIGH+'executable format:', ctx.executable_fmt.getpr())
 
     if ctx.is_exe.is_true():
         report_exe_specific(ctx)
