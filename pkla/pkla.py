@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2023.05.17+
+# Version 2023.05.29+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE file, and
@@ -313,6 +313,7 @@ def pkl_read_main(ctx):
         ctx.is_exe.set(True)
         pkl_read_exe(ctx)
     elif detect_pklite_com(ctx):
+        ctx.is_exe.set(False)
         ctx.is_pklite.set(True)
         ctx.executable_fmt.set('DOS COM')
     else:
@@ -343,11 +344,15 @@ def pkl_decode_intro_COM(ctx):
         ctx.intro.segclass.set('COM-1.00like')
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+9))
         ctx.position2.set(pos+10)
+        ctx.is_beta.set(False)
+        ctx.load_high.set(False)
     elif bseq_match(ctx, pos,
         b'\x50\xb8??\xba??\x3b\xc4\x73', 0x3f):
         ctx.intro.segclass.set('COM-1.50like')
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+10))
         ctx.position2.set(pos+11)
+        ctx.is_beta.set(False)
+        ctx.load_high.set(False)
     elif bseq_match(ctx, pos,
         b'\xba??\xa1\x02\x00\x2d??\x8c\xcb??????\x77', 0x3f):
         ctx.intro.segclass.set('COM-beta')
@@ -694,6 +699,22 @@ def pkl_decode_decompr_COM(ctx):
 # Look at the decompressor, and find the compressed data pos.
 def pkl_decode_decompr(ctx):
     if not ctx.decompr.pos.val_known:
+        # A hack, until we decide where the "copier" starts for this format.
+        if ctx.is_exe.val and ctx.is_beta.val:
+            if bseq_match(ctx, ctx.entrypoint.val+0x59,
+                b'\xf3\xa5\x2e\xa1????????\xcb\xfc', 0x3f):
+                # small
+                ctx.decompr.pos.set(ctx.entrypoint.val+0x66)
+            elif bseq_match(ctx, ctx.entrypoint.val+0x5b,
+                b'\xf3\xa5\x85\xed????????????\xcb\xfc', 0x3f):
+                # large
+                ctx.decompr.pos.set(ctx.entrypoint.val+0x6c)
+            elif bseq_match(ctx, ctx.entrypoint.val,
+                b'\x2e\x8c\x1e??\xfc\x8c\xc8\x2e\x2b\x06', 0x3f):
+                # load-high
+                ctx.decompr.pos.set(ctx.entrypoint.val+5)
+
+    if not ctx.decompr.pos.val_known:
         return
 
     if ctx.executable_fmt.val=='DOS COM':
@@ -723,8 +744,12 @@ def pkl_decode_decompr(ctx):
         ctx.start_of_cmpr_data.set(2 + ip_to_filepos(ctx,
             getu16(ctx, pos+5)))
         ctx.decompr.segclass.set('v120small_old')
+    elif bseq_match(ctx, pos, \
+        b'\xfc\x8c\xc8\x2e\x2b\x06??\x8e\xd8\xbf', 0x3f):
+        ctx.decompr.segclass.set('beta')
     else:
-        ctx.errmsg = "Can't decode decompressor"
+        if ctx.is_beta.is_false_or_unk():
+            ctx.errmsg = "Can't decode decompressor"
         return
 
 def pkl_deduce_settings1(ctx):
@@ -750,9 +775,12 @@ def pkl_scan_decompr1(ctx):
     if not ctx.approx_end_of_decompressor.val_known:
         return
     if ctx.decompr.pos.val_known:
-        startpos = ctx.decompr.pos.val+94
+        if ctx.is_beta.is_true():
+            startpos = ctx.decompr.pos.val
+        else:
+            startpos = ctx.decompr.pos.val+94
     elif ctx.is_beta.is_true() and ctx.codestart.val_known:
-        # Kind of a hack. For beta files, I don't know how to find the best
+        # Kind of a hack. For some beta files, I don't know how to find the best
         # place to search from.
         startpos = ctx.codestart.val
     else:
@@ -1055,6 +1083,25 @@ def pkl_fingerprint_beta(ctx):
         if dsize==468 or dsize==371: # 371 = loadhigh
             ctx.createdby.set('PKLITE 1.00beta')
 
+def pkl_fingerprint_COM(ctx):
+    prod = 'PKLITE '
+    if not ctx.createdby.val_known:
+        if ctx.copier.segclass.val=='COM-1.15like':
+            ctx.createdby.set(prod+'1.15')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='COM-1.50like':
+            ctx.createdby.set(prod+'1.50-2.01')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='COM-1.00like':
+            x = getbyte(ctx, ctx.decompr.pos.val+136)
+            if x==0x1d:
+                ctx.createdby.set(prod+'1.00-1.03')
+            elif x==0x1c:
+                ctx.createdby.set(prod+'1.05-1.14')
+    if not ctx.createdby.val_known:
+        if ctx.intro.segclass.val=='COM-beta':
+            ctx.createdby.set(prod+'1.00beta')
+
 def pkl_fingerprint(ctx):
     if not ctx.v120_compression.val_known:
         return
@@ -1065,6 +1112,9 @@ def pkl_fingerprint(ctx):
     if not ctx.is_scrambled.val_known:
         return
 
+    if ctx.executable_fmt.val=='DOS COM':
+        pkl_fingerprint_COM(ctx)
+        return
     if ctx.v120_compression.is_true():
         pkl_fingerprint_v120(ctx)
         return
