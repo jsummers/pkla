@@ -247,18 +247,15 @@ def is_win3x_pklite_format(ctx):
     return True
 
 def detect_pklite_com(ctx):
+    # TODO: This is kind of redundant (see pkl_decode_intro_COM())
     if bseq_match(ctx, 0, b'\xb8??\xba??\x3b\xc4?\x67', 0x3f):
         ctx.ver_info_pos = 44 # 1.00-1.14
-        ctx.start_of_cmpr_data.set(448)
     elif bseq_match(ctx, 0, b'\xb8??\xba??\x3b\xc4?\x69', 0x3f):
         ctx.ver_info_pos = 46 # 1.15
-        ctx.start_of_cmpr_data.set(450)
     elif bseq_match(ctx, 0, b'\x50\xb8??\xba??\x3b', 0x3f):
         ctx.ver_info_pos = 46 # 1.50-2.01
-        ctx.start_of_cmpr_data.set(464)
     elif bseq_match(ctx, 0, b'\xba??\xa1??\x2d\x20', 0x3f):
         ctx.ver_info_pos = 36 # beta
-        ctx.start_of_cmpr_data.set(500)
 
     if ctx.ver_info_pos>0:
         return True
@@ -339,6 +336,24 @@ def pkl_decode_intro_COM(ctx):
     ctx.v120_compression.set(False)
     ctx.obfuscated_offsets.set(False)
     ctx.intro.pos.set(0)
+
+    pos = 0
+    if bseq_match(ctx, pos,
+        b'\xb8??\xba??\x3b\xc4\x73', 0x3f):
+        ctx.intro.segclass.set('COM-1.00like')
+        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+9))
+        ctx.position2.set(pos+10)
+    elif bseq_match(ctx, pos,
+        b'\x50\xb8??\xba??\x3b\xc4\x73', 0x3f):
+        ctx.intro.segclass.set('COM-1.50like')
+        ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+10))
+        ctx.position2.set(pos+11)
+    elif bseq_match(ctx, pos,
+        b'\xba??\xa1\x02\x00\x2d??\x8c\xcb??????\x77', 0x3f):
+        ctx.intro.segclass.set('COM-beta')
+        ctx.is_beta.set(True)
+        ctx.position2.set(follow_1byte_jmp(ctx, pos+18))
+        ctx.errorhandler.pos.set(pos+26)
 
 # Decode the first part of the executable code, and
 # find "position2": the position of the descrambler, or, if not scrambled,
@@ -563,6 +578,30 @@ def pkl_descramble(ctx):
             val = n1 ^ n2
         putu16(ctx, val, i)
 
+def pkl_decode_copier_COM(ctx):
+    if not ctx.position2.val_known:
+        return
+
+    ctx.copier.pos.set(ctx.position2.val)
+    pos = ctx.copier.pos.val
+    pos_of_decompr_pos_field = 0
+
+    if bseq_match(ctx, pos,
+        b'\x8b\xc4\x2d??\x25\xf0\xff\x8b\xf8\xb9??\xbe', 0x3f):
+        ctx.copier.segclass.set('COM-1.00like')
+        pos_of_decompr_pos_field = pos+14
+    elif bseq_match(ctx, pos,
+        b'\x8b\xc4\x2d??\x90\x25\xf0\xff\x8b\xf8\xb9??\x90\xbe', 0x3f):
+        ctx.copier.segclass.set('COM-1.15like')
+        pos_of_decompr_pos_field = pos+16
+    elif bseq_match(ctx, pos,
+        b'\xfa\xbc\x00\x02\x8e\xd0\xfb', 0x3f):
+        ctx.copier.segclass.set('COM-beta')
+        ctx.decompr.pos.set(pos+24)
+
+    if pos_of_decompr_pos_field!=0:
+        ctx.decompr.pos.set(getu16(ctx, pos_of_decompr_pos_field) - 0x100)
+
 # What we call the 'copier' is the part of the code that starts at
 # the beginning of the scrambled section, if there is a scrambled
 # section.
@@ -574,6 +613,10 @@ def pkl_descramble(ctx):
 # the stack. It's that pushed address that we want to find. We'll use
 # it to reliably find the start of the decompressor in the file.
 def pkl_decode_copier(ctx):
+    if ctx.executable_fmt.val=='DOS COM':
+        pkl_decode_copier_COM(ctx)
+        return
+
     if ctx.copier.pos.val_known:
         pos = ctx.copier.pos.val
     elif ctx.is_scrambled.is_true():
@@ -632,9 +675,29 @@ def pkl_decode_copier(ctx):
             # there's definitely no scrambled section.
             ctx.is_scrambled.set(False)
 
+def pkl_decode_decompr_COM(ctx):
+    pos = ctx.decompr.pos.val
+    keypos = 0
+
+    if bseq_match(ctx, pos,
+        b'\xfd\x8b\xf8\x4f\x4f\xbe', 0x3f):
+        ctx.decompr.segclass.set('COM-1.00like')
+        keypos = pos+6
+    elif bseq_match(ctx, pos,
+        b'\xfd\xbe??\x03\xf2\x8b\xfa\x4f\x4f', 0x3f):
+        ctx.decompr.segclass.set('COM-beta')
+        keypos = pos+2
+
+    if keypos!=0:
+        ctx.start_of_cmpr_data.set(getu16(ctx, keypos) +2 - 0x100)
+
 # Look at the decompressor, and find the compressed data pos.
 def pkl_decode_decompr(ctx):
     if not ctx.decompr.pos.val_known:
+        return
+
+    if ctx.executable_fmt.val=='DOS COM':
+        pkl_decode_decompr_COM(ctx)
         return
 
     pos = ctx.decompr.pos.val
@@ -665,10 +728,11 @@ def pkl_decode_decompr(ctx):
         return
 
 def pkl_deduce_settings1(ctx):
-    if (not ctx.start_of_cmpr_data.val_known) and ctx.is_beta.is_true():
+    if (not ctx.start_of_cmpr_data.val_known) and ctx.is_beta.is_true() and \
+        ctx.is_exe.val:
         ctx.start_of_cmpr_data.set(ctx.codestart.val)
 
-    if ctx.is_beta.is_true():
+    if ctx.is_beta.is_true() and ctx.is_exe.val:
         ctx.approx_end_of_decompressor.set(ctx.codeend.val)
     elif ctx.start_of_cmpr_data.val_known:
         ctx.approx_end_of_decompressor.set(ctx.start_of_cmpr_data.val)
