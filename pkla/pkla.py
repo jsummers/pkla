@@ -195,6 +195,8 @@ def bseq_exact(ctx, pos1, vals):
 
     return True
 
+# maxbytes is the number of starting positions to consider
+# (not the size of the 'haystack').
 def find_bseq_match(ctx, startpos, maxbytes, vals, wildcard):
     pos = startpos
 
@@ -215,6 +217,8 @@ def find_bseq_match(ctx, startpos, maxbytes, vals, wildcard):
 
     return False, 0
 
+# maxbytes is the number of starting positions to consider
+# (not the size of the 'haystack').
 def find_bseq_exact(ctx, startpos, maxbytes, vals):
     pos = startpos
 
@@ -327,7 +331,9 @@ def pkl_read_main(ctx):
 def pkl_decode_overlay(ctx):
     if ctx.overlay_size.val < 1:
         return
-    if bseq_exact(ctx, ctx.overlay.pos.val, b'\x50\x4b\x03\x04'):
+    found, pos = find_bseq_match(ctx, ctx.overlay.pos.val, 2,
+        b'\x50\x4b\x03\x04', 0x3f)
+    if found:
         ctx.overlay.segclass.set('ZIP')
 
 def pkl_decode_intro_COM(ctx):
@@ -1073,6 +1079,9 @@ def pkl_fingerprint_v120(ctx):
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+314,
                 b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22'):
                 ctx.createdby.set('ZIP2EXE 2.50 shareware')
+    if not ctx.createdby.val_known:
+        if ctx.overlay_size.val==0:
+            ctx.createdby.set('PKLITE - private PKWARE version')
 
 def pkl_fingerprint_beta(ctx):
     dsize = ctx.codeend.val - ctx.entrypoint.val
@@ -1273,6 +1282,9 @@ def report_pklite_specific(ctx):
         print(']')
 
 def pkl_report(ctx):
+    if ctx.want_descrambled:
+        return
+
     if ctx.include_prefixes:
         ctx.p_INFO = 'INFO: ' # Not needed.
         ctx.p_LOW  = 'LOW : ' # Might have *some* use.
