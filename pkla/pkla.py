@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2023.05.29+
+# Version 2023.05.31+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE file, and
@@ -1099,14 +1099,33 @@ def pkl_fingerprint_COM(ctx):
             ctx.createdby.set(prod+'1.15')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='COM-1.50like':
-            ctx.createdby.set(prod+'1.50-2.01')
+            if ctx.ver_reported.val==0x132:
+                ctx.createdby.set(prod+'1.50')
+            elif ctx.ver_reported.val==0x201:
+                ctx.createdby.set(prod+'2.01')
+            else:
+                ctx.createdby.set(prod+'1.50-2.01')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='COM-1.00like':
             x = getbyte(ctx, ctx.decompr.pos.val+136)
             if x==0x1d:
-                ctx.createdby.set(prod+'1.00-1.03')
+                if ctx.ver_reported.val==0x100:
+                    ctx.createdby.set(prod+'1.00')
+                elif ctx.ver_reported.val==0x103:
+                    ctx.createdby.set(prod+'1.03')
+                else:
+                    ctx.createdby.set(prod+'1.00-1.03')
             elif x==0x1c:
-                ctx.createdby.set(prod+'1.05-1.14')
+                if ctx.ver_reported.val==0x105:
+                    ctx.createdby.set(prod+'1.05')
+                elif ctx.ver_reported.val==0x10c:
+                    ctx.createdby.set(prod+'1.12')
+                elif ctx.ver_reported.val==0x10d:
+                    ctx.createdby.set(prod+'1.13')
+                elif ctx.ver_reported.val==0x10e:
+                    ctx.createdby.set(prod+'1.14')
+                else:
+                    ctx.createdby.set(prod+'1.05-1.14')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='COM-beta':
             ctx.createdby.set(prod+'1.00beta')
