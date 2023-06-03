@@ -470,7 +470,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     if bseq_match(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x33\xc2\xab\xeb\xf6', 0x3f):
-        ctx.descrambler.segclass.set('1.14scrambled')
+        ctx.descrambler.segclass.set('1.14')
         ctx.scramble_algorithm.set(1) # 33 = XOR
         ctx.pos_of_scrambled_word_count = pos+11
         pos_of_endpos_field = pos+14
@@ -478,7 +478,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
-        ctx.descrambler.segclass.set('1.20var1') # e.g. pklite.exe 1.15
+        ctx.descrambler.segclass.set('1.20var1a') # e.g. pklite.exe 1.15
         ctx.scramble_algorithm.set(2)  # 03 = ADD
         ctx.pos_of_scrambled_word_count = pos+10
         pos_of_endpos_field = pos+13
@@ -495,7 +495,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         b'\x59\x2d\x20\x00\x8e\xd0\x51??\x00\x50\x80\x3e'
         b'\x41\x01\xc3\x75\xe6\x52\xb8??\xbe??\x56\x56\x52\x50\x90'
         b'???????\x74???????\x33', 0x3f):
-        ctx.descrambler.segclass.set('1.50scrambled')
+        ctx.descrambler.segclass.set('1.50')
         ctx.scramble_algorithm.set(1)
         ctx.pos_of_scrambled_word_count = pos+20
         pos_of_endpos_field = pos+23
@@ -509,7 +509,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         pos_of_jmp_field = pos+28
     elif bseq_match(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe?????????\x74???\x03', 0x3f):
-        ctx.descrambler.segclass.set('1.20pkzip204clike')
+        ctx.descrambler.segclass.set('pkzip2.04clike')
         ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
@@ -1029,7 +1029,7 @@ def pkl_fingerprint_extra(ctx):
             ctx.createdby.set(prod+'1.15')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.50' and \
-            ctx.descrambler.segclass.val=='1.50scrambled' and \
+            ctx.descrambler.segclass.val=='1.50' and \
             ctx.copier_subclass.val=='common+10' and \
             ctx.decompr.segclass.val=='common':
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+304,
@@ -1053,7 +1053,7 @@ def pkl_fingerprint_extra(ctx):
 def pkl_fingerprint_v120(ctx):
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
-            ctx.descrambler.segclass.val=='1.20var1' and \
+            ctx.descrambler.segclass.val=='1.20var1a' and \
             ctx.copier_subclass.val=='1.20var1small+7' and \
             ctx.decompr.segclass.val=='v120small':
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+306,
