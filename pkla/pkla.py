@@ -201,6 +201,9 @@ def find_bseq_match(ctx, startpos, maxbytes, vals, wildcard):
     pos = startpos
 
     while pos < startpos+maxbytes:
+        if pos+len(vals) > ctx.file_size.val:
+            return False, 0
+
         foundmatch = True
 
         for i in range(len(vals)):
@@ -962,14 +965,17 @@ def pkl_fingerprint_100_to_105(ctx):
         prod = 'PKLITE '
 
     if bseq_exact(ctx, ctx.decompr.pos.val+9, b'\xbe\xfe\xff'):
-        # 1.00 or 1.03. If large mode, we can tell which.
-        if ctx.large_compression.val:
+        # 1.00 or 1.03.
+
+        # TODO: I'm not sure this part always works.
+        if ctx.large_compression.val and (not ctx.extra_compression.val):
             x = getbyte(ctx, ctx.copier.pos.val+17)
             if x==0x22:
                 ctx.createdby.set(prod+'1.00')
             elif x==0x23:
                 ctx.createdby.set(prod+'1.03')
-        else:
+
+        if not ctx.createdby.val_known:
             if ctx.ver_reported.val==0x100:
                 ctx.createdby.set(prod+'1.00')
             elif ctx.ver_reported.val==0x103:
@@ -1072,6 +1078,9 @@ def pkl_fingerprint_v120(ctx):
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\x54\xb4\xc8\x5a\x9b\x6b\x46\x86\x67\x77\xcf\xdf\xce\x00\x00\x9f'):
                 ctx.createdby.set('ZIP2EXE 2.04e shareware')
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\xf5\xbf\xad\x5f\xfd\xbf\x2d\x00\x00\x4f\xd1\x4e\x9d\x6f\xa8\xff'):
+                ctx.createdby.set('ZIP2EXE 2.04e registered')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\xb3\xc9\x59\x9a\x64\x47\x85\x66\x70\xce\xdc\x00\x00\xdf\x80\x46'):
                 ctx.createdby.set('ZIP2EXE 2.04g shareware')
