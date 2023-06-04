@@ -467,53 +467,54 @@ def pkl_detect_and_decode_descrambler(ctx):
     pos_of_jmp_field = 0
     pos = ctx.position2.val
 
+    op_pos = 0
     if bseq_match(ctx, pos,
         b'\x2d\x20\x00\x8e\xd0\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x33\xc2\xab\xeb\xf6', 0x3f):
         ctx.descrambler.segclass.set('1.14')
-        ctx.scramble_algorithm.set(1) # 33 = XOR
         ctx.pos_of_scrambled_word_count = pos+11
         pos_of_endpos_field = pos+14
         pos_of_jmp_field = pos + 22
+        op_pos = pos + 25
     elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
         ctx.descrambler.segclass.set('1.20var1a') # e.g. pklite.exe 1.15
-        ctx.scramble_algorithm.set(2)  # 03 = ADD
         ctx.pos_of_scrambled_word_count = pos+10
         pos_of_endpos_field = pos+13
         pos_of_jmp_field = pos + 20
+        op_pos = pos + 23
     elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81\xef??\x57\x57\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x03\xc2\xab\xeb\xf6', 0x3f):
         ctx.descrambler.segclass.set('1.20var1b') # e.g. pkzfind.exe
-        ctx.scramble_algorithm.set(2)  # 03 = ADD
         ctx.pos_of_scrambled_word_count = pos+10
         pos_of_endpos_field = pos+13
         pos_of_jmp_field = pos + 21
+        op_pos = pos + 24
     elif bseq_match(ctx, pos,
         b'\x59\x2d\x20\x00\x8e\xd0\x51??\x00\x50\x80\x3e'
         b'\x41\x01\xc3\x75\xe6\x52\xb8??\xbe??\x56\x56\x52\x50\x90'
         b'???????\x74???????\x33', 0x3f):
         ctx.descrambler.segclass.set('1.50')
-        ctx.scramble_algorithm.set(1)
         ctx.pos_of_scrambled_word_count = pos+20
         pos_of_endpos_field = pos+23
         pos_of_jmp_field = pos + 38
+        op_pos = pos + 45
     elif bseq_match(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe????????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('1.20var2') # e.g. pkzip.exe 2.04g
-        ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
         pos_of_jmp_field = pos+28
+        op_pos = pos + 31
     elif bseq_match(ctx, pos,
         b'\x2d\x20\x00????????????\xb9??\xbe?????????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('pkzip2.04clike')
-        ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+16
         pos_of_endpos_field = pos+19
         pos_of_jmp_field = pos+29
+        op_pos = pos + 32
     elif bseq_match(ctx, pos,
         b'\x2d\x20\x00?????????????????\xb9??\xbe??????????\x74???\x03', 0x3f):
         # TODO: The fact that we need several special patterns just for the
@@ -522,17 +523,17 @@ def pkl_detect_and_decode_descrambler(ctx):
         # code files from this era use in the descrambler doesn't help
         # matters.
         ctx.descrambler.segclass.set('pklite2.01like')
-        ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+21
         pos_of_endpos_field = pos+24
         pos_of_jmp_field = pos+35
+        op_pos = pos + 38
     elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81?????????????\xbb??\xbe??????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('chk4lite2.01like')
-        ctx.scramble_algorithm.set(2)
         ctx.pos_of_scrambled_word_count = pos+17
         pos_of_endpos_field = pos+20
         pos_of_jmp_field = pos+27
+        op_pos = pos + 30
 
     found_params = ctx.descrambler.segclass.val_known
     if found_params:
@@ -545,6 +546,12 @@ def pkl_detect_and_decode_descrambler(ctx):
         scrambled_endpos_raw = getu16(ctx, pos_of_endpos_field)
         ctx.pos_of_last_scrambled_word = ip_to_filepos(ctx, scrambled_endpos_raw)
         ctx.scrambled_section_startpos.set(follow_1byte_jmp(ctx, pos_of_jmp_field))
+        if op_pos>0:
+            op_byte = getbyte(ctx, op_pos)
+            if op_byte==0x33: # XOR
+                ctx.scramble_algorithm.set(1)
+            elif op_byte==0x03: # ADD
+                ctx.scramble_algorithm.set(2)
 
     if ctx.is_scrambled.is_true():
         ctx.descrambler.pos.set(pos)
