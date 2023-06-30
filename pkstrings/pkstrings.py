@@ -44,9 +44,10 @@ class item:
         self.item_id = id
 
 class knownfile:
-    def __init__(self, file_id, fingerprint):
+    def __init__(self, file_id, fingerprint, warn):
         self.file_id = file_id
         self.fingerprint = fingerprint
+        self.warn = warn
 
 def getbyte(ctx, offset):
     return ctx.blob[offset]
@@ -58,8 +59,8 @@ def getu16(ctx, offset):
     val = ctx.blob[offset] + 256*ctx.blob[offset+1]
     return val
 
-def pks_add_new_knownfile(ctx, file_id, fingerprint):
-    ff = knownfile(file_id, fingerprint)
+def pks_add_new_knownfile(ctx, file_id, fingerprint, warn=False):
+    ff = knownfile(file_id, fingerprint, warn)
     ctx.knownfiles.append(ff)
 
 def pks_init_knownfiles(ctx):
@@ -69,6 +70,10 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.01', 0x7423970a)
     pks_add_new_knownfile(ctx, 'zip2exe1.01', 0xc843808c)
     pks_add_new_knownfile(ctx, 'pkzipfix1.01', 0x6a1c5464)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04c', 0xde4cabec, warn=True)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04e', 0x72b5183a, warn=True)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00, warn=True)
+    pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554, warn=True)
 
 # (pks_add_new_item)
 def pks_ii(ctx, file_id, offset, ilen, bshift, id):
@@ -96,6 +101,18 @@ def pks_init_items(ctx):
     pks_ii(ctx, 'zipsfx1.01', 14363-512, 151, 3, 'intro')
     pks_ii(ctx, 'zipsfx1.01', 14963-512, 421, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx1.01', 15101-512, 137, 0, 'strings_2')
+
+    pks_ii(ctx, 'zipsfx2.04c', 17868-128, 686, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.04c', 18040-128, 152, 0, 'strings_2')
+
+    pks_ii(ctx, 'zipsfx2.04e', 18236-128, 686, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.04e', 18434-128, 152, 0, 'strings_2')
+
+    pks_ii(ctx, 'zipsfx2.04g', 18236-128, 686, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.04g', 18434-128, 152, 0, 'strings_2')
+
+    pks_ii(ctx, 'zipsfx2.50', 19965-144, 779, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.50', 20118-144, 152, 0, 'strings_2')
 
     # Credit: Some of these items (the ones with hex numbers) were found
     # by Sergei Kolzun.
@@ -167,7 +184,17 @@ def pks_find_file_id(ctx):
         if ctx.knownfiles[i].fingerprint == ctx.fingerprint:
             ctx.file_id = ctx.knownfiles[i].file_id
             print(ctx.pfx+'file id:', ctx.file_id)
+            if ctx.knownfiles[i].warn:
+                print(ctx.pfx+'Warning: Support for this file is incomplete')
             return
+
+    sigtest = ctx.blob[30:36]
+    if sigtest==b'PKLITE' or sigtest==b'PKlite':
+        print(ctx.pfx+'Note: This looks like a PKLITE-compressed file.')
+        print(ctx.pfx+'  It must be decompressed before it can be analyzed '+ \
+            'with this script.')
+        print(ctx.pfx+'  Suggest using Deark, with "-opt execomp" option.')
+
     ctx.errmsg = 'Not a known file'
 
 def getbyte_with_pos_and_key(ctx):
