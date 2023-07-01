@@ -231,6 +231,33 @@ def pks_decode_string_item(ctx, ii):
 
     print(s.decode(encoding='cp437'))
 
+def pks_print_decoded_file(ctx, key, bshift):
+    s = bytearray()
+    ctx.pos = 0
+    s_pos = ctx.pos
+    ctx.key = key
+
+    b0 = getbyte_with_pos_and_key(ctx)
+    b1 = getbyte_with_pos_and_key(ctx)
+
+    for i in range(ctx.codeend-ctx.codestart-10):
+        if bshift==0:
+            ob = b0
+        else:
+            ob = ((b0<<bshift)&0xff) | (b1>>(8-bshift))
+
+        if (ob>=32 and ob<=126):
+            s.append(ob)
+            if len(s)>=240:
+                print(s_pos, s.decode(encoding='cp437'))
+                s = bytearray()
+                s_pos = ctx.pos
+
+        b0 = b1
+        b1 = getbyte_with_pos_and_key(ctx)
+
+    print(s.decode(encoding='cp437'))
+
 def pks_process_strings(ctx):
     for i in range(len(ctx.items)):
         if ctx.items[i].file_id==ctx.file_id:
@@ -239,23 +266,7 @@ def pks_process_strings(ctx):
 def usage():
     print('usage: pkstrings.py [options] <infile>')
 
-def main():
-    ctx = context()
-    ctx.pfx = '### '
-
-    xcount = 0
-    for a1 in range(1, len(sys.argv)):
-        arg = sys.argv[a1]
-        if arg[0:1]=='-':
-            continue
-        xcount += 1
-        if xcount==1:
-            ctx.infilename = arg
-
-    if xcount!=1:
-        usage()
-        return
-
+def pks_process_file(ctx):
     pks_init_knownfiles(ctx)
     pks_init_items(ctx)
 
@@ -272,6 +283,48 @@ def main():
 
     if ctx.errmsg=='':
         pks_process_strings(ctx)
+
+def pks_scan_1test(ctx, startkey, bshift):
+    print(ctx.pfx+'TEST', startkey, bshift)
+    pks_print_decoded_file(ctx, startkey, bshift)
+
+def pks_scan_file(ctx):
+    pks_open_file(ctx)
+    if ctx.errmsg!='':
+        return
+
+    pks_read_main(ctx)
+    if ctx.errmsg!='':
+        return
+
+    for sh in range(8):
+        for key in range(256):
+            pks_scan_1test(ctx, key, sh)
+
+def main():
+    ctx = context()
+    ctx.pfx = '### '
+    ctx.want_scan = False
+
+    xcount = 0
+    for a1 in range(1, len(sys.argv)):
+        arg = sys.argv[a1]
+        if arg[0:1]=='-':
+            if arg=='-scan':
+                ctx.want_scan = True
+            continue
+        xcount += 1
+        if xcount==1:
+            ctx.infilename = arg
+
+    if xcount!=1:
+        usage()
+        return
+
+    if ctx.want_scan:
+        pks_scan_file(ctx)
+    else:
+        pks_process_file(ctx)
 
     if ctx.errmsg!='':
         print(ctx.pfx+'Error:', ctx.errmsg)
