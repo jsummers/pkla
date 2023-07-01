@@ -70,10 +70,10 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.01', 0x7423970a)
     pks_add_new_knownfile(ctx, 'zip2exe1.01', 0xc843808c)
     pks_add_new_knownfile(ctx, 'pkzipfix1.01', 0x6a1c5464)
-    pks_add_new_knownfile(ctx, 'zipsfx2.04c', 0xde4cabec, warn=True)
-    pks_add_new_knownfile(ctx, 'zipsfx2.04e', 0x72b5183a, warn=True)
-    pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00, warn=True)
-    pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554, warn=True)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04c', 0xde4cabec)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04e', 0x72b5183a)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00)
+    pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554)
 
 # (pks_add_new_item)
 def pks_ii(ctx, file_id, offset, ilen, bshift, id):
@@ -102,15 +102,31 @@ def pks_init_items(ctx):
     pks_ii(ctx, 'zipsfx1.01', 14963-512, 421, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx1.01', 15101-512, 137, 0, 'strings_2')
 
+    pks_ii(ctx, 'zipsfx2.04c', 15456+82,  450, 4, 'send_money')
+    pks_ii(ctx, 'zipsfx2.04c', 15667+46,  173, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.04c', 16211+133, 630, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.04c', 17103-128, 629, 4, 'usage')
     pks_ii(ctx, 'zipsfx2.04c', 17868-128, 686, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.04c', 18040-128, 152, 0, 'strings_2')
 
+    pks_ii(ctx, 'zipsfx2.04e', 15857+49,  450, 4, 'send_money')
+    pks_ii(ctx, 'zipsfx2.04e', 16044+37,  173, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.04e', 16549+163, 630, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.04e', 17102+241, 629, 4, 'usage')
     pks_ii(ctx, 'zipsfx2.04e', 18236-128, 686, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.04e', 18434-128, 152, 0, 'strings_2')
 
+    pks_ii(ctx, 'zipsfx2.04g', 15857+49,  450, 4, 'send_money')
+    pks_ii(ctx, 'zipsfx2.04g', 16044+37,  173, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.04g', 16549+163, 630, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.04g', 17102+241, 629, 4, 'usage')
     pks_ii(ctx, 'zipsfx2.04g', 18236-128, 686, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.04g', 18434-128, 152, 0, 'strings_2')
 
+    pks_ii(ctx, 'zipsfx2.50', 17074+76, 606, 4, 'please_register')
+    pks_ii(ctx, 'zipsfx2.50', 17232+97, 178, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.50', 17801+6,  477, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.50', 18435+3,  630, 4, 'usage')
     pks_ii(ctx, 'zipsfx2.50', 19965-144, 779, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.50', 20118-144, 152, 0, 'strings_2')
 
