@@ -79,6 +79,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx2.04e-reg', 0x6a2aad04, warn2=True)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg', 0xad5aa1cf)
     pks_add_new_knownfile(ctx, 'zipsfx2.50-reg', 0xf6690492, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
 
 # (pks_add_new_item)
 def pks_ii(ctx, file_id, offset, ilen, bshift, id):
@@ -158,6 +159,10 @@ def pks_init_items(ctx):
     pks_ii(ctx, 'pkzipfix1.01', 7502+98, 113, 5, 'intro')
     pks_ii(ctx, 'pkzipfix1.01', 7804+58, 78,  0, 'strings_1')
     pks_ii(ctx, 'pkzipfix1.01', 7938+61, 137, 0, 'strings_2')
+
+    pks_ii(ctx, 'pkzip2.04g', 53268+47, 1707, 0, 'strings_1')
+    pks_ii(ctx, 'pkzip2.04g', 54523+35, 152,  0, 'strings_2')
+    pks_ii(ctx, 'pkzip2.04g', 55368+4,  814,  0, 'strings_3')
 
 def pks_open_file(ctx):
     inf = open(ctx.infilename, "rb")
@@ -276,9 +281,9 @@ def pks_print_decoded_file(ctx, key, bshift):
 
         if (ob>=32 and ob<=126):
             s.append(ob)
-            if len(s)>=240:
+            if len(s)>=100:
                 print(s_pos, s.decode(encoding='cp437'))
-                s = bytearray()
+                s.clear()
                 s_pos = ctx.pos
 
         b0 = b1
