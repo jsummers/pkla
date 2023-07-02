@@ -74,6 +74,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx2.04e', 0x72b5183a)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00)
     pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg', 0xad5aa1cf)
 
 # (pks_add_new_item)
 def pks_ii(ctx, file_id, offset, ilen, bshift, id):
@@ -122,6 +123,13 @@ def pks_init_items(ctx):
     pks_ii(ctx, 'zipsfx2.04g', 17102+241, 629, 4, 'usage')
     pks_ii(ctx, 'zipsfx2.04g', 18236-128, 686, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.04g', 18434-128, 152, 0, 'strings_2')
+
+    pks_ii(ctx, 'zipsfx2.04g-reg', 15331+112, 227, 4, 'is_registered')
+    pks_ii(ctx, 'zipsfx2.04g-reg', 15595+24,  175, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.04g-reg', 15974+123, 477, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.04g-reg', 16517+210, 629, 4, 'usage')
+    pks_ii(ctx, 'zipsfx2.04g-reg', 17598+150, 686, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.04g-reg', 17907+39,  152, 0, 'strings_2')
 
     pks_ii(ctx, 'zipsfx2.50', 17074+76, 606, 4, 'please_register')
     pks_ii(ctx, 'zipsfx2.50', 17232+97, 178, 4, 'intro')
