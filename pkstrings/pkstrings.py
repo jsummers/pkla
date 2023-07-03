@@ -36,8 +36,8 @@ class context:
         ctx.items = []
 
 class item:
-    def __init__(self, file_id, endpos, ilen, bshift, id):
-        self.file_id = file_id
+    def __init__(self, endpos, ilen, bshift, id):
+        #self.file_id = file_id
         self.endpos = endpos
         self.ilen = ilen
         self.bshift = bshift
@@ -82,101 +82,99 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
 
 # (pks_add_new_item)
-def pks_ii(ctx, file_id, offset, ilen, bshift, id):
-    ii = item(file_id, offset, ilen, bshift, id)
+def pks_ii(ctx, offset, ilen, bshift, id):
+    ii = item(offset, ilen, bshift, id)
     ctx.items.append(ii)
 
 def pks_init_items(ctx):
-    pks_ii(ctx, 'zipsfx0.90', 12804-512, 436, 6, 'reg_info')
-    pks_ii(ctx, 'zipsfx0.90', 13549-512, 744, 5, 'terms')
-    pks_ii(ctx, 'zipsfx0.90', 14137-512, 587, 4, 'usage')
-    pks_ii(ctx, 'zipsfx0.90', 14311-512, 173, 3, 'intro')
-    pks_ii(ctx, 'zipsfx0.90', 14910-512, 416, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx0.90', 15052-512, 142, 0, 'strings_2')
+    if ctx.file_id=='zipsfx0.90':
+        pks_ii(ctx, 12804-512, 436, 6, 'reg_info')
+        pks_ii(ctx, 13549-512, 744, 5, 'terms')
+        pks_ii(ctx, 14137-512, 587, 4, 'usage')
+        pks_ii(ctx, 14311-512, 173, 3, 'intro')
+        pks_ii(ctx, 14910-512, 416, 0, 'strings_1')
+        pks_ii(ctx, 15052-512, 142, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx0.92', 12548-512, 436, 6, 'reg_info')
-    pks_ii(ctx, 'zipsfx0.92', 13293-512, 744, 5, 'terms')
-    pks_ii(ctx, 'zipsfx0.92', 13881-512, 587, 4, 'usage')
-    pks_ii(ctx, 'zipsfx0.92', 14055-512, 173, 3, 'intro')
-    pks_ii(ctx, 'zipsfx0.92', 14654-512, 416, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx0.92', 14791-512, 137, 0, 'strings_2')
+    if ctx.file_id=='zipsfx0.92':
+        pks_ii(ctx, 12548-512, 436, 6, 'reg_info')
+        pks_ii(ctx, 13293-512, 744, 5, 'terms')
+        pks_ii(ctx, 13881-512, 587, 4, 'usage')
+        pks_ii(ctx, 14055-512, 173, 3, 'intro')
+        pks_ii(ctx, 14654-512, 416, 0, 'strings_1')
+        pks_ii(ctx, 14791-512, 137, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx1.01', 12900-512, 436, 6, 'reg_info')
-    pks_ii(ctx, 'zipsfx1.01', 13625-512, 724, 5, 'terms')
-    pks_ii(ctx, 'zipsfx1.01', 14211-512, 585, 4, 'usage')
-    pks_ii(ctx, 'zipsfx1.01', 14363-512, 151, 3, 'intro')
-    pks_ii(ctx, 'zipsfx1.01', 14963-512, 421, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx1.01', 15101-512, 137, 0, 'strings_2')
+    if ctx.file_id=='zipsfx1.01':
+        pks_ii(ctx, 12900-512, 436, 6, 'reg_info')
+        pks_ii(ctx, 13625-512, 724, 5, 'terms')
+        pks_ii(ctx, 14211-512, 585, 4, 'usage')
+        pks_ii(ctx, 14363-512, 151, 3, 'intro')
+        pks_ii(ctx, 14963-512, 421, 0, 'strings_1')
+        pks_ii(ctx, 15101-512, 137, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.04c', 15456+82,  450, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.04c', 15667+46,  173, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.04c', 16211+133, 630, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.04c', 17103-128, 629, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.04c', 17868-128, 686, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.04c', 18040-128, 152, 0, 'strings_2')
+    if ctx.file_id=='zipsfx2.04c':
+        pks_ii(ctx, 15456+82,  450, 4, 'reg_info')
+        pks_ii(ctx, 15667+46,  173, 4, 'intro')
+        pks_ii(ctx, 16211+133, 630, 4, 'terms')
+        pks_ii(ctx, 17103-128, 629, 4, 'usage')
+        pks_ii(ctx, 17868-128, 686, 0, 'strings_1')
+        pks_ii(ctx, 18040-128, 152, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.04c-reg', 15058+17, 227, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.04c-reg', 15163+88, 175, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.04c-reg', 15703+26, 477, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.04c-reg', 16303+56, 629, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.04c-reg', 17372+8, 686, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.04c-reg', 17476+76, 152, 0, 'strings_2')
+    if ctx.file_id=='zipsfx2.04c-reg':
+        pks_ii(ctx, 15058+17, 227, 4, 'reg_info')
+        pks_ii(ctx, 15163+88, 175, 4, 'intro')
+        pks_ii(ctx, 15703+26, 477, 4, 'terms')
+        pks_ii(ctx, 16303+56, 629, 4, 'usage')
+        pks_ii(ctx, 17372+8, 686, 0, 'strings_1')
+        pks_ii(ctx, 17476+76, 152, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.04e', 15857+49,  450, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.04e', 16044+37,  173, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.04e', 16549+163, 630, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.04e', 17102+241, 629, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.04e', 18236-128, 686, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.04e', 18434-128, 152, 0, 'strings_2')
+    if ctx.file_id=='zipsfx2.04g' or ctx.file_id=='zipsfx2.04e':
+        pks_ii(ctx, 15857+49,  450, 4, 'reg_info')
+        pks_ii(ctx, 16044+37,  173, 4, 'intro')
+        pks_ii(ctx, 16549+163, 630, 4, 'terms')
+        pks_ii(ctx, 17102+241, 629, 4, 'usage')
+        pks_ii(ctx, 18236-128, 686, 0, 'strings_1')
+        pks_ii(ctx, 18434-128, 152, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.04e-reg', 15331+112, 227, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.04e-reg', 15595+24,  175, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.04e-reg', 15974+123, 477, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.04e-reg', 16517+210, 629, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.04e-reg', 17598+150, 686, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.04e-reg', 17907+39,  152, 0, 'strings_2')
+    if ctx.file_id=='zipsfx2.04g-reg' or ctx.file_id=='zipsfx2.04e-reg':
+        pks_ii(ctx, 15331+112, 227, 4, 'reg_info')
+        pks_ii(ctx, 15595+24,  175, 4, 'intro')
+        pks_ii(ctx, 15974+123, 477, 4, 'terms')
+        pks_ii(ctx, 16517+210, 629, 4, 'usage')
+        pks_ii(ctx, 17598+150, 686, 0, 'strings_1')
+        pks_ii(ctx, 17907+39,  152, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.04g', 15857+49,  450, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.04g', 16044+37,  173, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.04g', 16549+163, 630, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.04g', 17102+241, 629, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.04g', 18236-128, 686, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.04g', 18434-128, 152, 0, 'strings_2')
+    if ctx.file_id=='zipsfx2.50':
+        pks_ii(ctx, 17074+76,  606, 4, 'reg_info')
+        pks_ii(ctx, 17232+97,  178, 4, 'intro')
+        pks_ii(ctx, 17801+6,   477, 4, 'terms')
+        pks_ii(ctx, 18435+3,   630, 4, 'usage')
+        pks_ii(ctx, 19965-144, 779, 0, 'strings_1')
+        pks_ii(ctx, 20118-144, 152, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.04g-reg', 15331+112, 227, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.04g-reg', 15595+24,  175, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.04g-reg', 15974+123, 477, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.04g-reg', 16517+210, 629, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.04g-reg', 17598+150, 686, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.04g-reg', 17907+39,  152, 0, 'strings_2')
+    if ctx.file_id=='pkunzip1.01':
+        pks_ii(ctx, 17601+197, 438, 3, 'reg_info')
+        pks_ii(ctx, 18420+109, 730, 6, 'terms')
+        pks_ii(ctx, 19363+32,  865, 4, 'usage')
+        pks_ii(ctx, 19413+125, 142, 5, 'intro')
+        pks_ii(ctx, 19776+87,  137, 0, 'strings_1')
+        pks_ii(ctx, 20313+187, 614, 0, 'strings_2')
 
-    pks_ii(ctx, 'zipsfx2.50', 17074+76,  606, 4, 'reg_info')
-    pks_ii(ctx, 'zipsfx2.50', 17232+97,  178, 4, 'intro')
-    pks_ii(ctx, 'zipsfx2.50', 17801+6,   477, 4, 'terms')
-    pks_ii(ctx, 'zipsfx2.50', 18435+3,   630, 4, 'usage')
-    pks_ii(ctx, 'zipsfx2.50', 19965-144, 779, 0, 'strings_1')
-    pks_ii(ctx, 'zipsfx2.50', 20118-144, 152, 0, 'strings_2')
+    if ctx.file_id=='zip2exe1.01':
+        pks_ii(ctx, 5445+100, 857, 4, 'usage+terms')
+        pks_ii(ctx, 5682+5,   141, 3, 'intro')
+        pks_ii(ctx, 5794+45,  141, 0, 'strings_1')
+        pks_ii(ctx, 5943+34,  137, 0, 'strings_2')
 
-    pks_ii(ctx, 'pkunzip1.01', 17601+197, 438, 3, 'reg_info')
-    pks_ii(ctx, 'pkunzip1.01', 18420+109, 730, 6, 'terms')
-    pks_ii(ctx, 'pkunzip1.01', 19363+32,  865, 4, 'usage')
-    pks_ii(ctx, 'pkunzip1.01', 19413+125, 142, 5, 'intro')
-    pks_ii(ctx, 'pkunzip1.01', 19776+87,  137, 0, 'strings_1')
-    pks_ii(ctx, 'pkunzip1.01', 20313+187, 614, 0, 'strings_2')
+    if ctx.file_id=='pkzipfix1.01':
+        pks_ii(ctx, 7469+17, 974, 3, 'usage+terms')
+        pks_ii(ctx, 7502+98, 113, 5, 'intro')
+        pks_ii(ctx, 7804+58, 78,  0, 'strings_1')
+        pks_ii(ctx, 7938+61, 137, 0, 'strings_2')
 
-    pks_ii(ctx, 'zip2exe1.01', 5445+100, 857, 4, 'usage+terms')
-    pks_ii(ctx, 'zip2exe1.01', 5682+5,   141, 3, 'intro')
-    pks_ii(ctx, 'zip2exe1.01', 5794+45,  141, 0, 'strings_1')
-    pks_ii(ctx, 'zip2exe1.01', 5943+34,  137, 0, 'strings_2')
-
-    pks_ii(ctx, 'pkzipfix1.01', 7469+17, 974, 3, 'usage+terms')
-    pks_ii(ctx, 'pkzipfix1.01', 7502+98, 113, 5, 'intro')
-    pks_ii(ctx, 'pkzipfix1.01', 7804+58, 78,  0, 'strings_1')
-    pks_ii(ctx, 'pkzipfix1.01', 7938+61, 137, 0, 'strings_2')
-
-    pks_ii(ctx, 'pkzip2.04g', 53268+47, 1707, 0, 'strings_1')
-    pks_ii(ctx, 'pkzip2.04g', 54523+35, 152,  0, 'strings_2')
-    pks_ii(ctx, 'pkzip2.04g', 55368+4,  814,  0, 'strings_3')
+    if ctx.file_id=='pkzip2.04g':
+        pks_ii(ctx, 53268+47, 1707, 0, 'strings_1')
+        pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
+        pks_ii(ctx, 55368+4,  814,  0, 'strings_3')
 
 def pks_open_file(ctx):
     inf = open(ctx.infilename, "rb")
@@ -309,8 +307,7 @@ def pks_print_decoded_file(ctx, key, bshift):
 
 def pks_process_strings(ctx):
     for i in range(len(ctx.items)):
-        if ctx.items[i].file_id==ctx.file_id:
-            pks_decode_string_item(ctx, ctx.items[i])
+        pks_decode_string_item(ctx, ctx.items[i])
 
 def usage():
     print('usage: pkstrings.py [options] <infile>')
@@ -329,7 +326,8 @@ def pks_process_file(ctx):
     if ctx.errmsg=='':
         pks_find_file_id(ctx)
 
-    pks_init_items(ctx)
+    if ctx.errmsg=='':
+        pks_init_items(ctx)
 
     if ctx.errmsg=='':
         pks_process_strings(ctx)
