@@ -50,14 +50,11 @@ class knownfile:
         self.warn1 = warn1
         self.warn2 = warn2
 
-def getbyte(ctx, offset):
-    return ctx.blob[offset]
+def getbyte_codeimage(ctx, offset):
+    return ctx.codeimage[offset]
 
-def getbyte_rel(ctx, offset):
-    return ctx.blob[ctx.codestart + offset]
-
-def getu16(ctx, offset):
-    val = ctx.blob[offset] + 256*ctx.blob[offset+1]
+def getu16_exeheader(ctx, offset):
+    val = ctx.exeheader[offset] + 256*ctx.exeheader[offset+1]
     return val
 
 def pks_add_new_knownfile(ctx, file_id, fingerprint, warn1=False, warn2=False):
@@ -184,23 +181,23 @@ def pks_init_items(ctx):
         pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
         pks_ii(ctx, 55368+4,  814,  0, 'strings_3')
 
-def pks_open_file(ctx):
-    inf = open(ctx.infilename, "rb")
-    ctx.blob = bytearray(inf.read())
-    inf.close()
-    ctx.file_size = len(ctx.blob)
+# Read the header and the code image into memory.
+def pks_read_main2(ctx, inf):
+    inf.seek(0, 2)
+    ctx.file_size = inf.tell()
+    inf.seek(0, 0)
 
-def pks_read_main(ctx):
-    ctx.ver_info_pos = 0
-    sig = getu16(ctx, 0)
+    ctx.exeheader = bytearray(inf.read(64))
+
+    sig = getu16_exeheader(ctx, 0)
     if (sig!=0x5a4d and sig!=0x4d5a):
         ctx.errmsg = "Not an EXE file"
         return
 
-    e_cblp = getu16(ctx, 2)
-    e_cp = getu16(ctx, 4)
+    e_cblp = getu16_exeheader(ctx, 2)
+    e_cp = getu16_exeheader(ctx, 4)
 
-    e_cparhdr = getu16(ctx, 8)
+    e_cparhdr = getu16_exeheader(ctx, 8)
     ctx.codestart = e_cparhdr*16
 
     if e_cblp==0:
@@ -208,14 +205,18 @@ def pks_read_main(ctx):
     else:
         ctx.codeend = 512 * (e_cp-1) + e_cblp
 
-    if ctx.codeend <= ctx.file_size:
-        ctx.overlay_size = ctx.file_size - ctx.codeend
-    else:
+    if ctx.codeend > ctx.file_size:
         ctx.errmsg = "Truncated EXE file"
         return
 
-    if ctx.overlay_size > 0:
-        ctx.overlay_pos = ctx.codeend
+    inf.seek(ctx.codestart, 0);
+    ctx.codeimage = bytearray(inf.read(ctx.codeend-ctx.codestart))
+    inf.close()
+
+def pks_read_main(ctx):
+    inf = open(ctx.infilename, "rb")
+    pks_read_main2(ctx, inf)
+    inf.close()
 
 def pks_fingerprint(ctx):
     print(ctx.pfx+'code start:', ctx.codestart)
@@ -226,8 +227,7 @@ def pks_fingerprint(ctx):
     else:
         nbytes_to_fingerprint = codelen
 
-    ctx.fingerprint = mycrc32(ctx.blob[ctx.codestart : \
-        ctx.codestart+nbytes_to_fingerprint])
+    ctx.fingerprint = mycrc32(ctx.codeimage[0 : nbytes_to_fingerprint])
     print(ctx.pfx+'fingerprint: 0x%08x' % (ctx.fingerprint))
 
 def pks_find_file_id(ctx):
@@ -241,7 +241,7 @@ def pks_find_file_id(ctx):
                 print(ctx.pfx+'Warning: This file is recognized, but not supported')
             return
 
-    sigtest = ctx.blob[30:36]
+    sigtest = ctx.exeheader[30:36]
     if sigtest==b'PKLITE' or sigtest==b'PKlite':
         print(ctx.pfx+'Note: This looks like a PKLITE-compressed file.')
         print(ctx.pfx+'  It must be decompressed before it can be analyzed '+ \
@@ -251,7 +251,7 @@ def pks_find_file_id(ctx):
     ctx.errmsg = 'Not a known file'
 
 def getbyte_with_pos_and_key(ctx):
-    b = getbyte_rel(ctx, ctx.pos)
+    b = getbyte_codeimage(ctx, ctx.pos)
     ctx.pos += 1
     b = b ^ ctx.key
     ctx.key = (ctx.key+0xff) & 0xff
@@ -323,8 +323,6 @@ def usage():
 def pks_process_file(ctx):
     pks_init_knownfiles(ctx)
 
-    pks_open_file(ctx)
-
     if ctx.errmsg=='':
         pks_read_main(ctx)
 
@@ -345,10 +343,6 @@ def pks_scan_1test(ctx, startkey, bshift):
     pks_print_decoded_file(ctx, startkey, bshift)
 
 def pks_scan_file(ctx):
-    pks_open_file(ctx)
-    if ctx.errmsg!='':
-        return
-
     pks_read_main(ctx)
     if ctx.errmsg!='':
         return
