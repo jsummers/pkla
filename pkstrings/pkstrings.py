@@ -75,8 +75,8 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx2.04e', 0x72b5183a)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00)
     pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554)
-    pks_add_new_knownfile(ctx, 'zipsfx2.04c-reg', 0xfb93f922, warn2=True)
-    pks_add_new_knownfile(ctx, 'zipsfx2.04e-reg', 0x6a2aad04, warn2=True)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04c-reg', 0xfb93f922)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04e-reg', 0x6a2aad04)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg', 0xad5aa1cf)
     pks_add_new_knownfile(ctx, 'zipsfx2.50-reg', 0xf6690492, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
@@ -115,12 +115,26 @@ def pks_init_items(ctx):
     pks_ii(ctx, 'zipsfx2.04c', 17868-128, 686, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.04c', 18040-128, 152, 0, 'strings_2')
 
+    pks_ii(ctx, 'zipsfx2.04c-reg', 15058+17, 227, 4, 'reg_info')
+    pks_ii(ctx, 'zipsfx2.04c-reg', 15163+88, 175, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.04c-reg', 15703+26, 477, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.04c-reg', 16303+56, 629, 4, 'usage')
+    pks_ii(ctx, 'zipsfx2.04c-reg', 17372+8, 686, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.04c-reg', 17476+76, 152, 0, 'strings_2')
+
     pks_ii(ctx, 'zipsfx2.04e', 15857+49,  450, 4, 'reg_info')
     pks_ii(ctx, 'zipsfx2.04e', 16044+37,  173, 4, 'intro')
     pks_ii(ctx, 'zipsfx2.04e', 16549+163, 630, 4, 'terms')
     pks_ii(ctx, 'zipsfx2.04e', 17102+241, 629, 4, 'usage')
     pks_ii(ctx, 'zipsfx2.04e', 18236-128, 686, 0, 'strings_1')
     pks_ii(ctx, 'zipsfx2.04e', 18434-128, 152, 0, 'strings_2')
+
+    pks_ii(ctx, 'zipsfx2.04e-reg', 15331+112, 227, 4, 'reg_info')
+    pks_ii(ctx, 'zipsfx2.04e-reg', 15595+24,  175, 4, 'intro')
+    pks_ii(ctx, 'zipsfx2.04e-reg', 15974+123, 477, 4, 'terms')
+    pks_ii(ctx, 'zipsfx2.04e-reg', 16517+210, 629, 4, 'usage')
+    pks_ii(ctx, 'zipsfx2.04e-reg', 17598+150, 686, 0, 'strings_1')
+    pks_ii(ctx, 'zipsfx2.04e-reg', 17907+39,  152, 0, 'strings_2')
 
     pks_ii(ctx, 'zipsfx2.04g', 15857+49,  450, 4, 'reg_info')
     pks_ii(ctx, 'zipsfx2.04g', 16044+37,  173, 4, 'intro')
@@ -269,6 +283,7 @@ def pks_print_decoded_file(ctx, key, bshift):
     ctx.pos = 0
     s_pos = ctx.pos
     ctx.key = key
+    s_key = ctx.key
 
     b0 = getbyte_with_pos_and_key(ctx)
     b1 = getbyte_with_pos_and_key(ctx)
@@ -282,9 +297,10 @@ def pks_print_decoded_file(ctx, key, bshift):
         if (ob>=32 and ob<=126):
             s.append(ob)
             if len(s)>=100:
-                print(s_pos, s.decode(encoding='cp437'))
+                print(s_pos, s_key, s.decode(encoding='cp437'))
                 s.clear()
                 s_pos = ctx.pos
+                s_key = ctx.key
 
         b0 = b1
         b1 = getbyte_with_pos_and_key(ctx)
