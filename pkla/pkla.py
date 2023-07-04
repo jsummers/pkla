@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2023.05.31+
+# Version 2023.07.04
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE file, and
@@ -149,6 +149,8 @@ class context:
         ctx.num_checksummed_bytes = pkla_number()
         ctx.pklite_checksum = pkla_number()
         ctx.checksum_calc = pkla_number()
+        ctx.has_psp_sig = pkla_bool()
+        ctx.psp_sig = pkla_string()
 
 def getbyte(ctx, offset):
     return ctx.blob[offset]
@@ -817,6 +819,33 @@ def pkl_scan_decompr1(ctx):
     if ok:
         ctx.extra_compression.set(True)
 
+def look_for_psp_sig(ctx):
+    startpos = ctx.decompr.pos.val
+    endpos = ctx.approx_end_of_decompressor.val
+    amt_to_scan = endpos - startpos - 5
+
+    # This signature is usually present if and only if the decoder
+    # is scrambled. At least some versions of PKLITE have a "-e-"
+    # option to turn it off; unfortunately I don't think I have any
+    # such files, or any version of PKLITE that can make them. So,
+    # I don't know if this test really works.
+
+    ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
+        b'\xc7\x06\x5c\x00\x50\x4b')
+    if ok:
+        ctx.has_psp_sig.set(True)
+        ctx.psp_sig.set('PK')
+        return
+
+    ok, foundpos = find_bseq_exact(ctx, startpos, amt_to_scan,
+        b'\xc7\x06\x5c\x00\x70\x6b')
+    if ok:
+        ctx.has_psp_sig.set(True)
+        ctx.psp_sig.set('pk')
+        return
+
+    ctx.has_psp_sig.set(False)
+
 # Detect:
 # - large vs. small
 # - v1.20 compression
@@ -835,6 +864,8 @@ def pkl_scan_decompr2(ctx):
     if ok:
         ctx.has_pklite_checksum.set(True)
         ctx.pklite_checksum.set(getu16(ctx, foundpos+1))
+
+    look_for_psp_sig(ctx)
 
     # All files except v1.20 should have this pattern near the end of the
     # decompressor.
@@ -1309,6 +1340,11 @@ def report_pklite_specific(ctx):
         print(ctx.p_INFO+' num checksummed bytes:', ctx.num_checksummed_bytes.getpr())
         print(ctx.p_INFO+' reported pklite checksum:', ctx.pklite_checksum.getpr_hex())
         print(ctx.p_INFO+' calculated pklite checksum:', ctx.checksum_calc.getpr_hex())
+
+    if ctx.has_psp_sig.val_known:
+        print(ctx.p_INFO+'has PSP signature:', ctx.has_psp_sig.getpr_yesno())
+        if ctx.psp_sig.is_true():
+            print(ctx.p_INFO+' PSP signature:', ctx.psp_sig.getpr())
 
     print(ctx.p_INFO+'created by:', ctx.createdby.getpr())
     if len(ctx.tags) > 0:
