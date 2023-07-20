@@ -687,6 +687,15 @@ def pkl_decode_copier(ctx):
         if found:
             ctx.copier.segclass.set('un2pack')
             pos_of_decompr_pos_field = foundpos+7
+    if not found:
+        # Seen in "LIQ.EXE", from SOUND/MODPLAY/LIQ100.ZIP.
+        # http://cd.textfiles.com/pdos9606/SOUND/MODPLAY/LIQ100.ZIP
+        found, foundpos = find_bseq_match(ctx, pos, amt_to_scan,
+            b'\xb9??\x33\xff\x57\xbe??\xfc\xf3\xa5\xfb\xcb', 0x3f)
+        if found:
+            ctx.copier.segclass.set('common-hack1')
+            pos_of_decompr_pos_field = foundpos+7
+            ctx.tags.append('patched or hacked')
 
     if found:
         ctx.copier_subclass.set('%s+%d' % (ctx.copier.segclass.val, \
