@@ -873,6 +873,8 @@ def pkl_scan_decompr2(ctx):
     if ok:
         ctx.has_pklite_checksum.set(True)
         ctx.pklite_checksum.set(getu16(ctx, foundpos+1))
+    else:
+        ctx.has_pklite_checksum.set(False)
 
     look_for_psp_sig(ctx)
 
@@ -1344,11 +1346,11 @@ def report_pklite_specific(ctx):
         print(ctx.p_CRIT+' offsets key:', ctx.offsets_key.getpr_hex1())
     if ctx.is_exe.is_true_or_unk():
         print(ctx.p_HIGH+'reloc table format:', reloc_tbl_cmpr_method.val)
-    if ctx.has_pklite_checksum.val_known:
-        print(ctx.p_INFO+'has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
-        print(ctx.p_INFO+' num checksummed bytes:', ctx.num_checksummed_bytes.getpr())
-        print(ctx.p_INFO+' reported pklite checksum:', ctx.pklite_checksum.getpr_hex())
-        print(ctx.p_INFO+' calculated pklite checksum:', ctx.checksum_calc.getpr_hex())
+    print(ctx.p_LOW+'has pklite checksum:', ctx.has_pklite_checksum.getpr_yesno())
+    if ctx.has_pklite_checksum.is_true():
+        print(ctx.p_LOW+' num checksummed bytes:', ctx.num_checksummed_bytes.getpr())
+        print(ctx.p_LOW+' reported pklite checksum:', ctx.pklite_checksum.getpr_hex())
+        print(ctx.p_LOW+' calculated pklite checksum:', ctx.checksum_calc.getpr_hex())
 
     if ctx.has_psp_sig.val_known:
         print(ctx.p_INFO+'has PSP signature:', ctx.has_psp_sig.getpr_yesno())
