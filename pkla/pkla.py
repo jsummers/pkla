@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2023.07.04
+# Version 2023.07.20+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE file, and
@@ -1353,9 +1353,9 @@ def report_pklite_specific(ctx):
         print(ctx.p_LOW+' calculated pklite checksum:', ctx.checksum_calc.getpr_hex())
 
     if ctx.has_psp_sig.val_known:
-        print(ctx.p_INFO+'has PSP signature:', ctx.has_psp_sig.getpr_yesno())
+        print(ctx.p_MED+'has PSP signature:', ctx.has_psp_sig.getpr_yesno())
         if ctx.psp_sig.is_true():
-            print(ctx.p_INFO+' PSP signature:', ctx.psp_sig.getpr())
+            print(ctx.p_MED+' PSP signature:', ctx.psp_sig.getpr())
 
     print(ctx.p_INFO+'created by:', ctx.createdby.getpr())
     if len(ctx.tags) > 0:
