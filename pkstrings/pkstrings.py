@@ -96,8 +96,8 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe0.92', 0xe26b9d22, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe1.01', 0xc843808c)
     pks_add_new_knownfile(ctx, 'zip2exe1.02', 0xd7d91a43, warn2=True)
-    pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a, warn2=True)
-    pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a)
+    pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d)
 
     # (pkzipfix introduced in v0.92.)
     pks_add_new_knownfile(ctx, 'pkzipfix0.92', 0x3a252515, warn2=True)
@@ -290,6 +290,21 @@ def pks_init_items(ctx):
         pks_ii(ctx, 5682+5,   141, 3, 'intro')
         pks_ii(ctx, 5794+45,  141, 0, 'strings_1')
         pks_ii(ctx, 5943+34,  137, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe1.10':
+        pks_ii(ctx, 4342+54,   140, 4, 'intro')
+        pks_ii(ctx, 5060+78,   741, 3, 'usage+terms')
+        # Note: Any strings from about 5150 to 20870 are probably artifacts
+        # from the embedded SFX modules, not strings used by zip2exe. They
+        # should not be listed here.
+        pks_ii(ctx, 21099+15,  234, 0, 'strings_1')
+        pks_ii(ctx, 21162+97,  145, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe1.10-export':
+        pks_ii(ctx, 4355+41,   140, 4, 'intro')
+        pks_ii(ctx, 5041+97,   741, 3, 'usage+terms')
+        pks_ii(ctx, 20332+20,  234, 0, 'strings_1')
+        pks_ii(ctx, 20445+52,  145, 0, 'strings_2')
 
     if ctx.file_id=='pkzipfix1.01':
         pks_ii(ctx, 7469+17, 974, 3, 'usage+terms')
