@@ -196,6 +196,35 @@ def pks_init_items(ctx):
         pks_ii(ctx, 28930+103, 137,  0, 'strings_1')
         pks_ii(ctx, 30373+31,  1188, 0, 'strings_2')
 
+    if ctx.file_id=='pkzip1.02':
+        pks_ii(ctx, 26283+41,  436,  5, 'reg_info')
+        pks_ii(ctx, 26985+66,  726,  3, 'terms')
+        pks_ii(ctx, 28379+41,  1368, 6, 'usage')
+        pks_ii(ctx, 28462+101, 142,  4, 'intro')
+        pks_ii(ctx, 29259+14,  145,  0, 'strings_1')
+        pks_ii(ctx, 30379+90,  1193, 0, 'strings_2')
+
+    if ctx.file_id=='pkzip1.10':
+        pks_ii(ctx, 29261+103, 436,  5, 'reg_info')
+        pks_ii(ctx, 29988+70,  693,  3, 'terms')
+        pks_ii(ctx, 31399+89,  1429, 6, 'usage')
+        pks_ii(ctx, 31627+36,  174,  4, 'intro')
+        pks_ii(ctx, 31851+16,  145,  0, 'strings_1')
+        pks_ii(ctx, 33075+56,  1233, 0, 'strings_2')
+
+    if ctx.file_id=='pkzip1.10-export':
+        pks_ii(ctx, 28040+28,  436,  5, 'reg_info')
+        pks_ii(ctx, 28707+55,  693,  3, 'terms')
+        pks_ii(ctx, 30130+20,  1387, 6, 'usage')
+        pks_ii(ctx, 30224+100, 173,  4, 'intro')
+        pks_ii(ctx, 30431+96,  145,  0, 'strings_1')
+        pks_ii(ctx, 31767+12,  1233, 0, 'strings_2')
+
+    if ctx.file_id=='pkzip2.04g':
+        pks_ii(ctx, 53268+47, 1707, 0, 'strings_1')
+        pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
+        pks_ii(ctx, 55368+4,  814,  0, 'strings_3')
+
     if ctx.file_id=='pkunzip0.90':
         pks_ii(ctx, 14609+53,  438, 4, 'reg_info')
         pks_ii(ctx, 15311+102, 750, 5, 'terms')
@@ -220,26 +249,6 @@ def pks_init_items(ctx):
         pks_ii(ctx, 19776+87,  137, 0, 'strings_1')
         pks_ii(ctx, 20313+187, 614, 0, 'strings_2')
 
-    if ctx.file_id=='zip2exe1.01':
-        pks_ii(ctx, 5445+100, 857, 4, 'usage+terms')
-        pks_ii(ctx, 5682+5,   141, 3, 'intro')
-        pks_ii(ctx, 5794+45,  141, 0, 'strings_1')
-        pks_ii(ctx, 5943+34,  137, 0, 'strings_2')
-
-    if ctx.file_id=='pkzipfix1.01':
-        pks_ii(ctx, 7469+17, 974, 3, 'usage+terms')
-        pks_ii(ctx, 7502+98, 113, 5, 'intro')
-        pks_ii(ctx, 7804+58, 78,  0, 'strings_1')
-        pks_ii(ctx, 7938+61, 137, 0, 'strings_2')
-
-    if ctx.file_id=='pkzip1.02':
-        pks_ii(ctx, 26283+41,  436,  5, 'reg_info')
-        pks_ii(ctx, 26985+66,  726,  3, 'terms')
-        pks_ii(ctx, 28379+41,  1368, 6, 'usage')
-        pks_ii(ctx, 28462+101, 142,  4, 'intro')
-        pks_ii(ctx, 29259+14,  145,  0, 'strings_1')
-        pks_ii(ctx, 30379+90,  1193, 0, 'strings_2')
-
     if ctx.file_id=='pkunzip1.02':
         pks_ii(ctx, 18275+51,  438, 3, 'reg_info')
         pks_ii(ctx, 19856+67,  865, 4, 'usage')
@@ -247,22 +256,6 @@ def pks_init_items(ctx):
         pks_ii(ctx, 20055+11,  142, 5, 'intro')
         pks_ii(ctx, 20832+58,  614, 0, 'strings_2')
         pks_ii(ctx, 21031+48,  145, 0, 'strings_1')
-
-    if ctx.file_id=='pkzip1.10':
-        pks_ii(ctx, 29261+103, 436,  5, 'reg_info')
-        pks_ii(ctx, 29988+70,  693,  3, 'terms')
-        pks_ii(ctx, 31399+89,  1429, 6, 'usage')
-        pks_ii(ctx, 31627+36,  174,  4, 'intro')
-        pks_ii(ctx, 31851+16,  145,  0, 'strings_1')
-        pks_ii(ctx, 33075+56,  1233, 0, 'strings_2')
-
-    if ctx.file_id=='pkzip1.10-export':
-        pks_ii(ctx, 28040+28,  436,  5, 'reg_info')
-        pks_ii(ctx, 28707+55,  693,  3, 'terms')
-        pks_ii(ctx, 30130+20,  1387, 6, 'usage')
-        pks_ii(ctx, 30224+100, 173,  4, 'intro')
-        pks_ii(ctx, 30431+96,  145,  0, 'strings_1')
-        pks_ii(ctx, 31767+12,  1233, 0, 'strings_2')
 
     if ctx.file_id=='pkunzip1.10':
         pks_ii(ctx, 19616+54,  438,  3, 'reg_info')
@@ -280,10 +273,17 @@ def pks_init_items(ctx):
         pks_ii(ctx, 20750+71,  145,  0, 'strings_1')
         pks_ii(ctx, 21504+98,  772,  0, 'strings_2')
 
-    if ctx.file_id=='pkzip2.04g':
-        pks_ii(ctx, 53268+47, 1707, 0, 'strings_1')
-        pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
-        pks_ii(ctx, 55368+4,  814,  0, 'strings_3')
+    if ctx.file_id=='zip2exe1.01':
+        pks_ii(ctx, 5445+100, 857, 4, 'usage+terms')
+        pks_ii(ctx, 5682+5,   141, 3, 'intro')
+        pks_ii(ctx, 5794+45,  141, 0, 'strings_1')
+        pks_ii(ctx, 5943+34,  137, 0, 'strings_2')
+
+    if ctx.file_id=='pkzipfix1.01':
+        pks_ii(ctx, 7469+17, 974, 3, 'usage+terms')
+        pks_ii(ctx, 7502+98, 113, 5, 'intro')
+        pks_ii(ctx, 7804+58, 78,  0, 'strings_1')
+        pks_ii(ctx, 7938+61, 137, 0, 'strings_2')
 
 # Read the header and the code image into memory.
 def pks_read_main2(ctx, inf):
