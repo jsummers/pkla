@@ -65,6 +65,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx0.90', 0x2400c6f5)
     pks_add_new_knownfile(ctx, 'zipsfx0.92', 0x8f7a3dd1)
     pks_add_new_knownfile(ctx, 'zipsfx1.01', 0xaa816885)
+    # (There is no zipsfx1.02.)
     pks_add_new_knownfile(ctx, 'zipsfx1.10', 0xf1ac0279, warn2=True)
     pks_add_new_knownfile(ctx, 'zipsfx1.10-export', 0x1afde3b7, warn2=True)
     pks_add_new_knownfile(ctx, 'zipsfx2.04c', 0xde4cabec)
@@ -91,8 +92,19 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.10', 0x8a352fe4)
     pks_add_new_knownfile(ctx, 'pkunzip1.10-export', 0x4f000d45)
 
+    pks_add_new_knownfile(ctx, 'zip2exe0.90', 0x027918a9, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe0.92', 0xe26b9d22, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe1.01', 0xc843808c)
+    pks_add_new_knownfile(ctx, 'zip2exe1.02', 0xd7d91a43, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d, warn2=True)
+
+    # (pkzipfix introduced in v0.92.)
+    pks_add_new_knownfile(ctx, 'pkzipfix0.92', 0x3a252515, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzipfix1.01', 0x6a1c5464)
+    # (There is no pkzipfix1.02.)
+    pks_add_new_knownfile(ctx, 'pkzipfix1.10', 0x62d6ef8a, warn2=True)
+    # (There is no unique pkzipfix1.10-export.)
 
 # (pks_add_new_item)
 def pks_ii(ctx, offset, ilen, bshift, id):
