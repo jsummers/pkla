@@ -34,10 +34,10 @@ class context:
         ctx.errmsg = ''
         ctx.knownfiles = []
         ctx.items = []
+        ctx.embedded_objects = []
 
 class item:
     def __init__(self, endpos, ilen, bshift, id):
-        #self.file_id = file_id
         self.endpos = endpos
         self.ilen = ilen
         self.bshift = bshift
@@ -107,9 +107,15 @@ def pks_init_knownfiles(ctx):
     # (There is no unique pkzipfix1.10-export.)
 
 # (pks_add_new_item)
-def pks_ii(ctx, offset, ilen, bshift, id):
-    ii = item(offset, ilen, bshift, id)
+def pks_ii(ctx, endpos, ilen, bshift, id):
+    ii = item(endpos, ilen, bshift, id)
     ctx.items.append(ii)
+
+# (pks_add_new_embedded_object)
+def pks_eo(ctx, endpos, ilen, filename):
+    ii = item(endpos, ilen, 0, '_embedded_object')
+    ii.filename = filename
+    ctx.embedded_objects.append(ii)
 
 def pks_init_items(ctx):
     if ctx.file_id=='zipsfx0.90':
@@ -294,9 +300,11 @@ def pks_init_items(ctx):
     if ctx.file_id=='zip2exe1.10':
         pks_ii(ctx, 4342+54,   140, 4, 'intro')
         pks_ii(ctx, 5060+78,   741, 3, 'usage+terms')
-        # Note: Any strings from about 5150 to 20870 are probably artifacts
+        # Note: Any strings inside the "sfx" objects are artifacts
         # from the embedded SFX modules, not strings used by zip2exe. They
         # should not be listed here.
+        pks_eo(ctx, 8598-512,  2934,  'sfx_mini.tmp')
+        pks_eo(ctx, 21382-512, 12784, 'sfx_standard.tmp')
         pks_ii(ctx, 21099+15,  234, 0, 'strings_1')
         pks_ii(ctx, 21162+97,  145, 0, 'strings_2')
 
@@ -388,11 +396,7 @@ def getbyte_with_pos_and_key(ctx):
     ctx.key = (ctx.key+0xff) & 0xff
     return b
 
-def pks_decode_string_item(ctx, ii):
-    print(ctx.pfx+'item: %s (%d-%d,%d)' % (ii.item_id, ii.endpos, ii.ilen, \
-        ii.bshift))
-
-    s = bytearray()
+def pks_decode_item(ctx, ii, s, convertNUL):
     ctx.pos = ii.endpos - ii.ilen
     ctx.key = ii.ilen & 0xff
 
@@ -405,7 +409,7 @@ def pks_decode_string_item(ctx, ii):
         else:
             ob = ((b0<<ii.bshift)&0xff) | (b1>>(8-ii.bshift))
 
-        if ob==0x00:
+        if ob==0x00 and convertNUL:
             ob=0x0a
 
         s.append(ob)
@@ -413,6 +417,11 @@ def pks_decode_string_item(ctx, ii):
 
         b1 = getbyte_with_pos_and_key(ctx)
 
+def pks_decode_and_print_string_item(ctx, ii):
+    print(ctx.pfx+'item: %s (%d-%d,%d)' % (ii.item_id, ii.endpos, ii.ilen, \
+        ii.bshift))
+    s = bytearray()
+    pks_decode_item(ctx, ii, s, True)
     print(s.decode(encoding='cp437'))
 
 def pks_print_decoded_file(ctx, key, bshift):
@@ -444,12 +453,27 @@ def pks_print_decoded_file(ctx, key, bshift):
 
     print(s.decode(encoding='cp437'))
 
+def pks_decode_blob_to_file(ctx, ii):
+    s = bytearray()
+    pks_decode_item(ctx, ii, s, False)
+    print(ctx.pfx+'Writing', ii.filename)
+    outf = open(ii.filename, "wb")
+    outf.write(s)
+    outf.close()
+
 def pks_process_strings(ctx):
     for i in range(len(ctx.items)):
-        pks_decode_string_item(ctx, ctx.items[i])
+        pks_decode_and_print_string_item(ctx, ctx.items[i])
+
+    if len(ctx.embedded_objects)>0 and not ctx.want_embedded_objects:
+        print(ctx.pfx+'This file has embedded objects. Use -e to extract them.')
 
 def usage():
     print('usage: pkstrings.py [options] <infile>')
+
+def pks_process_embedded_objects(ctx):
+    for ii in ctx.embedded_objects:
+        pks_decode_blob_to_file(ctx, ii)
 
 def pks_process_file(ctx):
     pks_init_knownfiles(ctx)
@@ -466,8 +490,11 @@ def pks_process_file(ctx):
     if ctx.errmsg=='':
         pks_init_items(ctx)
 
-    if ctx.errmsg=='':
+    if ctx.errmsg=='' and not ctx.want_embedded_objects:
         pks_process_strings(ctx)
+
+    if ctx.errmsg=='' and ctx.want_embedded_objects:
+        pks_process_embedded_objects(ctx)
 
 def pks_scan_1test(ctx, startkey, bshift):
     print(ctx.pfx+'TEST', startkey, bshift)
@@ -486,6 +513,7 @@ def main():
     ctx = context()
     ctx.pfx = '### '
     ctx.want_scan = False
+    ctx.want_embedded_objects = False
 
     xcount = 0
     for a1 in range(1, len(sys.argv)):
@@ -493,6 +521,8 @@ def main():
         if arg[0:1]=='-':
             if arg=='-scan':
                 ctx.want_scan = True
+            if arg=='-e':
+                ctx.want_embedded_objects = True
             continue
         xcount += 1
         if xcount==1:
