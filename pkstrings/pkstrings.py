@@ -105,6 +105,10 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe1.02', 0xd7d91a43)
     pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a)
     pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04c', 0x1b4f68ed)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04e', 0x4e6cba6b)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04g', 0xcda32810)
+    pks_add_new_knownfile(ctx, 'zip2exe2.50', 0xec9b2d59)
 
     # (pkzipfix introduced in v0.92.)
     pks_add_new_knownfile(ctx, 'pkzipfix0.92', 0x3a252515, warn2=True)
@@ -340,6 +344,38 @@ def pks_init_items(ctx):
         pks_eo(ctx, 20620-512, 12022, 'sfx_standard.tmp')
         pks_ii(ctx, 20332+20,  234, 0, 'strings_1')
         pks_ii(ctx, 20445+52,  145, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.04c':
+        pks_ii(ctx, 5028+72,  140, 4, 'intro')
+        pks_ii(ctx, 5805+81,  784, 4, 'usage+terms')
+        pks_eo(ctx, 21531-80,  15563, 'sfx_standard.tmp')
+        pks_eo(ctx, 24534-80,  3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 24848+82,  476, 0, 'strings_1')
+        pks_ii(ctx, 25145+109, 152, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.04e':
+        pks_ii(ctx, 23825+75,  140, 4, 'intro')
+        pks_ii(ctx, 24657+31,  786, 4, 'usage+terms')
+        pks_eo(ctx, 20825-80,  15769, 'sfx_standard.tmp')
+        pks_eo(ctx, 23828-80,  3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 25154+12,  476, 0, 'strings_1')
+        pks_ii(ctx, 25389+101, 152, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.04g':
+        pks_ii(ctx, 5033+83,   140, 4, 'intro')
+        pks_ii(ctx, 5802+100,  784, 4, 'usage+terms')
+        pks_eo(ctx, 21754-80,  15770, 'sfx_standard.tmp')
+        pks_eo(ctx, 24756-80,  3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 25097+55,  476, 0, 'strings_1')
+        pks_ii(ctx, 25369+107, 152, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.50':
+        pks_ii(ctx, 26435+11,   142, 4, 'intro')
+        pks_ii(ctx, 27521+86,  1159, 4, 'usage+terms')
+        pks_eo(ctx, 23248-96,  16768, 'sfx_standard.tmp')
+        pks_eo(ctx, 26398-96,  3150,  'sfx_mini.tmp')
+        pks_ii(ctx, 28671+47,  476, 0, 'strings_1')
+        pks_ii(ctx, 28864+14,  152, 0, 'strings_2')
 
     if ctx.file_id=='pkzipfix1.01':
         pks_ii(ctx, 7469+17, 974, 3, 'usage+terms')
