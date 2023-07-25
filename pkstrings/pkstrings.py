@@ -83,7 +83,10 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip1.02', 0xaf358298)
     pks_add_new_knownfile(ctx, 'pkzip1.10', 0xbd3c0723)
     pks_add_new_knownfile(ctx, 'pkzip1.10-export', 0x16788efe)
+    pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn2=True)
 
     pks_add_new_knownfile(ctx, 'pkunzip0.90', 0xa7edca44)
     pks_add_new_knownfile(ctx, 'pkunzip0.92', 0xa0bdf7d1)
@@ -91,11 +94,15 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.02', 0x9f66f20e)
     pks_add_new_knownfile(ctx, 'pkunzip1.10', 0x8a352fe4)
     pks_add_new_knownfile(ctx, 'pkunzip1.10-export', 0x4f000d45)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn2=True)
 
-    pks_add_new_knownfile(ctx, 'zip2exe0.90', 0x027918a9, warn2=True)
-    pks_add_new_knownfile(ctx, 'zip2exe0.92', 0xe26b9d22, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe0.90', 0x027918a9)
+    pks_add_new_knownfile(ctx, 'zip2exe0.92', 0xe26b9d22)
     pks_add_new_knownfile(ctx, 'zip2exe1.01', 0xc843808c)
-    pks_add_new_knownfile(ctx, 'zip2exe1.02', 0xd7d91a43, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe1.02', 0xd7d91a43)
     pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a)
     pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d)
 
@@ -291,11 +298,29 @@ def pks_init_items(ctx):
         pks_ii(ctx, 20750+71,  145,  0, 'strings_1')
         pks_ii(ctx, 21504+98,  772,  0, 'strings_2')
 
+    if ctx.file_id=='zip2exe0.90':
+        pks_ii(ctx, 5332+85,   857, 4, 'usage+terms')
+        pks_ii(ctx, 5496+63,   141, 3, 'intro')
+        pks_ii(ctx, 5607+5,    40,  0, 'strings_1')
+        pks_ii(ctx, 5725+29,   142, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe0.92':
+        pks_ii(ctx, 5386+47,   857, 4, 'usage+terms')
+        pks_ii(ctx, 5501+74,   141, 3, 'intro')
+        pks_ii(ctx, 5508+120,  40,  0, 'strings_1')
+        pks_ii(ctx, 5720+45,   137, 0, 'strings_2')
+
     if ctx.file_id=='zip2exe1.01':
         pks_ii(ctx, 5445+100, 857, 4, 'usage+terms')
         pks_ii(ctx, 5682+5,   141, 3, 'intro')
         pks_ii(ctx, 5794+45,  141, 0, 'strings_1')
         pks_ii(ctx, 5943+34,  137, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe1.02':
+        pks_ii(ctx, 5462+83,  857, 4, 'usage+terms')
+        pks_ii(ctx, 5620+67,  141, 3, 'intro')
+        pks_ii(ctx, 5796+43,  141, 0, 'strings_1')
+        pks_ii(ctx, 5926+59,  145, 0, 'strings_2')
 
     if ctx.file_id=='zip2exe1.10':
         pks_ii(ctx, 4342+54,   140, 4, 'intro')
@@ -311,6 +336,8 @@ def pks_init_items(ctx):
     if ctx.file_id=='zip2exe1.10-export':
         pks_ii(ctx, 4355+41,   140, 4, 'intro')
         pks_ii(ctx, 5041+97,   741, 3, 'usage+terms')
+        pks_eo(ctx, 8598-512,  2934,  'sfx_mini.tmp')
+        pks_eo(ctx, 20620-512, 12022, 'sfx_standard.tmp')
         pks_ii(ctx, 20332+20,  234, 0, 'strings_1')
         pks_ii(ctx, 20445+52,  145, 0, 'strings_2')
 
