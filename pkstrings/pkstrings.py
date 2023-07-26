@@ -57,6 +57,12 @@ def getu16_exeheader(ctx, offset):
     val = ctx.exeheader[offset] + 256*ctx.exeheader[offset+1]
     return val
 
+def gets16_exeheader(ctx, offset):
+    val = getu16_exeheader(ctx, offset)
+    if val >= 0x8000:
+        val -= 0x10000
+    return val
+
 def pks_add_new_knownfile(ctx, file_id, fingerprint, warn1=False, warn2=False):
     ff = knownfile(file_id, fingerprint, warn1, warn2)
     ctx.knownfiles.append(ff)
@@ -83,7 +89,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip1.02', 0xaf358298)
     pks_add_new_knownfile(ctx, 'pkzip1.10', 0xbd3c0723)
     pks_add_new_knownfile(ctx, 'pkzip1.10-export', 0x16788efe)
-    pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn2=True)
@@ -94,7 +100,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.02', 0x9f66f20e)
     pks_add_new_knownfile(ctx, 'pkunzip1.10', 0x8a352fe4)
     pks_add_new_knownfile(ctx, 'pkunzip1.10-export', 0x4f000d45)
-    pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn2=True)
@@ -116,6 +122,7 @@ def pks_init_knownfiles(ctx):
     # (There is no pkzipfix1.02.)
     pks_add_new_knownfile(ctx, 'pkzipfix1.10', 0x62d6ef8a, warn2=True)
     # (There is no unique pkzipfix1.10-export.)
+    pks_add_new_knownfile(ctx, 'pkzipfix2.04g', 0xd466fb3b)
 
 # (pks_add_new_item)
 def pks_ii(ctx, endpos, ilen, bshift, id):
@@ -249,6 +256,11 @@ def pks_init_items(ctx):
         pks_ii(ctx, 30431+96,  145,  0, 'strings_1')
         pks_ii(ctx, 31767+12,  1233, 0, 'strings_2')
 
+    if ctx.file_id=='pkzip2.04c':
+        pks_ii(ctx, 52641-368,  1593, 0, 'strings_1')
+        pks_ii(ctx, 53690-368,  152,  0, 'strings_2')
+        pks_ii(ctx, 54438-368,  748,  0, 'strings_3')
+
     if ctx.file_id=='pkzip2.04g':
         pks_ii(ctx, 53268+47, 1707, 0, 'strings_1')
         pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
@@ -301,6 +313,11 @@ def pks_init_items(ctx):
         pks_ii(ctx, 20546+64,  177,  5, 'intro')
         pks_ii(ctx, 20750+71,  145,  0, 'strings_1')
         pks_ii(ctx, 21504+98,  772,  0, 'strings_2')
+
+    if ctx.file_id=='pkunzip2.04c':
+        pks_ii(ctx, 33700+33,  713,  0, 'strings_1')
+        pks_ii(ctx, 33936+54,  152,  0, 'strings_2')
+        pks_ii(ctx, 34647+91,  748,  0, 'strings_3')
 
     if ctx.file_id=='zip2exe0.90':
         pks_ii(ctx, 5332+85,   857, 4, 'usage+terms')
@@ -383,6 +400,12 @@ def pks_init_items(ctx):
         pks_ii(ctx, 7804+58, 78,  0, 'strings_1')
         pks_ii(ctx, 7938+61, 137, 0, 'strings_2')
 
+    if ctx.file_id=='pkzipfix2.04g':
+        pks_ii(ctx, 7402+77,  119,  4, 'intro')
+        pks_ii(ctx, 8386+73,  979,  4, 'usage+terms')
+        pks_ii(ctx, 8517+97,  138,  0, 'strings_1')
+        pks_ii(ctx, 8725+47,  152,  0, 'strings_2')
+
 # Read the header and the code image into memory.
 def pks_read_main2(ctx, inf):
     inf.seek(0, 2)
@@ -401,6 +424,10 @@ def pks_read_main2(ctx, inf):
 
     e_cparhdr = getu16_exeheader(ctx, 8)
     ctx.codestart = e_cparhdr*16
+
+    e_ip = getu16_exeheader(ctx, 20)
+    e_cs = gets16_exeheader(ctx, 22)
+    ctx.entrypoint_rel = 16*e_cs + e_ip  # Relative to codestart
 
     if e_cblp==0:
         ctx.codeend = 512 * e_cp
@@ -428,6 +455,20 @@ def pks_fingerprint(ctx):
         nbytes_to_fingerprint = default_nbytes_to_fingerprint
     else:
         nbytes_to_fingerprint = codelen
+
+    # In real PKWARE files, after PKLITE decompression if needed, I've never
+    # seen the entry point to be close to the end of the code image.
+    # If it is, we assume it's caused by a patch added by a PKLITE decompressor
+    # like DISLITE or UNP.
+    # The purpose of such a patch is to replicate the "PSP signature" feature
+    # of PKLITE, but that's not important. What's important is that, for small
+    # files, it will mess up our fingerprinting scheme if we're not careful.
+    if (ctx.entrypoint_rel < nbytes_to_fingerprint) and \
+        (ctx.entrypoint_rel < codelen) and \
+        (ctx.entrypoint_rel+20 >= codelen):
+        print(ctx.pfx+'found likely %d-byte patch at end of code' % \
+            (codelen-ctx.entrypoint_rel))
+        nbytes_to_fingerprint = ctx.entrypoint_rel
 
     ctx.fingerprint = mycrc32(ctx.codeimage[0 : nbytes_to_fingerprint])
     print(ctx.pfx+'fingerprint: 0x%08x' % (ctx.fingerprint))
@@ -506,7 +547,7 @@ def pks_print_decoded_file(ctx, key, bshift):
         if (ob>=32 and ob<=126):
             s.append(ob)
             if len(s)>=100:
-                print(s_pos, s_key, s.decode(encoding='cp437'))
+                print("%d+%d %s" % (s_pos, s_key, s.decode(encoding='cp437')))
                 s.clear()
                 s_pos = ctx.pos
                 s_key = ctx.key
