@@ -90,9 +90,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip1.10', 0xbd3c0723)
     pks_add_new_knownfile(ctx, 'pkzip1.10-export', 0x16788efe)
     pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn1=True)
-    pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
-    pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn1=True)
 
     pks_add_new_knownfile(ctx, 'pkunzip0.90', 0xa7edca44)
     pks_add_new_knownfile(ctx, 'pkunzip0.92', 0xa0bdf7d1)
@@ -101,9 +101,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.10', 0x8a352fe4)
     pks_add_new_knownfile(ctx, 'pkunzip1.10-export', 0x4f000d45)
     pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn1=True)
-    pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn2=True)
-    pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn2=True)
-    pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn1=True)
 
     pks_add_new_knownfile(ctx, 'zip2exe0.90', 0x027918a9)
     pks_add_new_knownfile(ctx, 'zip2exe0.92', 0xe26b9d22)
@@ -264,10 +264,20 @@ def pks_init_items(ctx):
         pks_ii(ctx, 53690-368,  152,  0, 'strings_2')
         pks_ii(ctx, 54438-368,  748,  0, 'strings_3')
 
+    if ctx.file_id=='pkzip2.04e':
+        pks_ii(ctx, 53749+30, 1707, 0, 'strings_1')
+        pks_ii(ctx, 54941+89, 152,  0, 'strings_2')
+        pks_ii(ctx, 55771+73, 814,  0, 'strings_3')
+
     if ctx.file_id=='pkzip2.04g':
         pks_ii(ctx, 53268+47, 1707, 0, 'strings_1')
         pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
         pks_ii(ctx, 55368+4,  814,  0, 'strings_3')
+
+    if ctx.file_id=='pkzip2.50':
+        pks_ii(ctx, 64659+46, 2043, 0, 'strings_1')
+        pks_ii(ctx, 64808+66, 152,  0, 'strings_2')
+        pks_ii(ctx, 65717+67, 876,  0, 'strings_3')
 
     if ctx.file_id=='pkunzip0.90':
         pks_ii(ctx, 14609+53,  438, 4, 'reg_info')
@@ -321,6 +331,21 @@ def pks_init_items(ctx):
         pks_ii(ctx, 33700+33,  713,  0, 'strings_1')
         pks_ii(ctx, 33936+54,  152,  0, 'strings_2')
         pks_ii(ctx, 34647+91,  748,  0, 'strings_3')
+
+    if ctx.file_id=='pkunzip2.04e':
+        pks_ii(ctx, 34399+30,  877,  0, 'strings_1')
+        pks_ii(ctx, 34585+111, 152,  0, 'strings_2')
+        pks_ii(ctx, 35428+82,  814,  0, 'strings_3')
+
+    if ctx.file_id=='pkunzip2.04g':
+        pks_ii(ctx, 34373+88,  877,  0, 'strings_1')
+        pks_ii(ctx, 34588+94,  152,  0, 'strings_2')
+        pks_ii(ctx, 35390+106, 815,  0, 'strings_3')
+
+    if ctx.file_id=='pkunzip2.50':
+        pks_ii(ctx, 40417+21,  1458, 0, 'strings_1')
+        pks_ii(ctx, 40569+37,  152,  0, 'strings_2')
+        pks_ii(ctx, 41433+71,  876,  0, 'strings_3')
 
     if ctx.file_id=='zip2exe0.90':
         pks_ii(ctx, 5332+85,   857, 4, 'usage+terms')
