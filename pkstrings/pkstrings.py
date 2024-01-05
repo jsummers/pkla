@@ -92,7 +92,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04g-reg', 0xc2ecee66, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.50-reg', 0x294e9e9f, warn2=True)
 
     pks_add_new_knownfile(ctx, 'pkunzip0.90', 0xa7edca44)
     pks_add_new_knownfile(ctx, 'pkunzip0.92', 0xa0bdf7d1)
@@ -103,7 +105,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04g-reg', 0x5b8838d0, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.50-reg', 0xc9d37588, warn2=True)
 
     pks_add_new_knownfile(ctx, 'zip2exe0.90', 0x027918a9)
     pks_add_new_knownfile(ctx, 'zip2exe0.92', 0xe26b9d22)
@@ -114,7 +118,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe2.04c', 0x1b4f68ed)
     pks_add_new_knownfile(ctx, 'zip2exe2.04e', 0x4e6cba6b)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g', 0xcda32810)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04g-reg', 0x77fb9baf, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe2.50', 0xec9b2d59)
+    pks_add_new_knownfile(ctx, 'zip2exe2.50-reg', 0x2f201f50, warn2=True)
 
     # (pkzipfix introduced in v0.92.)
     pks_add_new_knownfile(ctx, 'pkzipfix0.92', 0x3a252515)
@@ -125,7 +131,11 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzipfix2.04c', 0xee8f66ad)
     pks_add_new_knownfile(ctx, 'pkzipfix2.04e', 0x97a12502)
     pks_add_new_knownfile(ctx, 'pkzipfix2.04g', 0xd466fb3b)
+    # (There is no unique pkzipfix2.04g-reg.)
     pks_add_new_knownfile(ctx, 'pkzipfix2.50', 0x816fdbf0)
+    # (There is no unique pkzipfix2.50-reg.)
+
+    pks_add_new_knownfile(ctx, 'putav2.04g-reg', 0x0c68b6ff, warn2=True)
 
 # (pks_add_new_item)
 def pks_ii(ctx, endpos, ilen, bshift, id):
