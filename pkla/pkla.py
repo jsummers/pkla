@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2023.07.20+
+# Version 2024.01.06+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE file, and
@@ -1129,6 +1129,13 @@ def pkl_fingerprint_v120(ctx):
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\xed\xf8\xb0\xa0\x5c\xf8\xb8\x28\x5c\xdc\x41\x00\x00\x80\x6c\xad'):
                 ctx.createdby.set('ZIP2EXE 2.04g registered')
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\x5f\x12\x00\xee\xfe\xda\x5a\x12\x93\xe3\xf6\xba\xaa\x5a\x00\x00'):
+                ctx.createdby.set('ZIP2EXE 2.04g registered (Shareware Marketing)')
+                # E.g.:
+                # https://archive.org/details/So_Much_Shareware_5_CD-ROM_Power_User_Software_1995
+                #  -> FINANCE/FTTLV500.ZIP -> HJS.EXE
+
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
             ctx.descrambler.segclass.val=='1.20var1b' and \
