@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkstrings.py
-# Version 2023.??.??
+# Version 2024.??.??
 # by Jason Summers
 #
 # A script to decode text strings in some PKWARE executable files
@@ -80,6 +80,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx2.04e-reg', 0x6a2aad04)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg', 0xad5aa1cf)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04g-regv2', 0xa451d121)
     pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554)
     pks_add_new_knownfile(ctx, 'zipsfx2.50-reg', 0xf6690492)
 
@@ -204,6 +205,15 @@ def pks_init_items(ctx):
         pks_ii(ctx, 16517+210, 629, 4, 'usage')
         pks_ii(ctx, 17598+150, 686, 0, 'strings_1')
         pks_ii(ctx, 17907+39,  152, 0, 'strings_2')
+
+    # "Shareware Marketing" edition
+    if ctx.file_id=='zipsfx2.04g-regv2':
+        pks_ii(ctx, 15320+101, 237, 4, 'reg_info')
+        pks_ii(ctx, 15535+62,  175, 4, 'intro')
+        pks_ii(ctx, 16009+66,  477, 4, 'terms')
+        pks_ii(ctx, 16647+58,  629, 4, 'usage')
+        pks_ii(ctx, 17651+81,  686, 0, 'strings_1')
+        pks_ii(ctx, 17852+78,  152, 0, 'strings_2')
 
     if ctx.file_id=='zipsfx2.50':
         pks_ii(ctx, 17074+76,  606, 4, 'reg_info')
