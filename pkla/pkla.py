@@ -1145,8 +1145,7 @@ def pkl_fingerprint_v120(ctx):
                 b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22'):
                 ctx.createdby.set('ZIP2EXE 2.50 shareware')
     if not ctx.createdby.val_known:
-        if ctx.overlay_size.val==0:
-            ctx.createdby.set('PKLITE - private PKWARE version')
+        ctx.createdby.set('PKLITE - private PKWARE version')
 
 def pkl_fingerprint_beta(ctx):
     dsize = ctx.codeend.val - ctx.entrypoint.val
