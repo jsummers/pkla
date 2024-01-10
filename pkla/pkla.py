@@ -336,7 +336,8 @@ def pkl_read_main(ctx):
 def pkl_decode_overlay(ctx):
     if ctx.overlay_size.val < 1:
         return
-    found, pos = find_bseq_match(ctx, ctx.overlay.pos.val, 2,
+    # Allow for an alignment byte, and/or PK\7\8, before PK\3\4.
+    found, pos = find_bseq_match(ctx, ctx.overlay.pos.val, 6,
         b'\x50\x4b\x03\x04', 0x3f)
     if found:
         ctx.overlay.segclass.set('ZIP')
