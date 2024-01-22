@@ -119,9 +119,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe2.04c', 0x1b4f68ed)
     pks_add_new_knownfile(ctx, 'zip2exe2.04e', 0x4e6cba6b)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g', 0xcda32810)
-    pks_add_new_knownfile(ctx, 'zip2exe2.04g-reg', 0x77fb9baf, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04g-reg', 0x77fb9baf)
     pks_add_new_knownfile(ctx, 'zip2exe2.50', 0xec9b2d59)
-    pks_add_new_knownfile(ctx, 'zip2exe2.50-reg', 0x2f201f50, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe2.50-reg', 0x2f201f50)
 
     # (pkzipfix introduced in v0.92.)
     pks_add_new_knownfile(ctx, 'pkzipfix0.92', 0x3a252515)
@@ -434,6 +434,14 @@ def pks_init_items(ctx):
         pks_ii(ctx, 25097+55,  476, 0, 'strings_1')
         pks_ii(ctx, 25369+107, 152, 0, 'strings_2')
 
+    if ctx.file_id=='zip2exe2.04g-reg':
+        pks_ii(ctx, 5087+30,   141,  4, 'intro')
+        pks_ii(ctx, 5863+39,   784,  4, 'usage+terms')
+        pks_eo(ctx, 21236+17,  15349, 'sfx_standard.tmp')
+        pks_eo(ctx, 24143+113, 3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 24723+9,   476,  0, 'strings_1')
+        pks_ii(ctx, 25009+55,  152,  0, 'strings_2')
+
     if ctx.file_id=='zip2exe2.50':
         pks_ii(ctx, 26435+11,   142, 4, 'intro')
         pks_ii(ctx, 27521+86,  1159, 4, 'usage+terms')
@@ -441,6 +449,14 @@ def pks_init_items(ctx):
         pks_eo(ctx, 26398-96,  3150,  'sfx_mini.tmp')
         pks_ii(ctx, 28671+47,  476, 0, 'strings_1')
         pks_ii(ctx, 28864+14,  152, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.50-reg':
+        pks_ii(ctx, 26538+84,   142,  4, 'intro')
+        pks_ii(ctx, 27705+12,   1093, 4, 'usage+terms')
+        pks_eo(ctx, 23234+95,   16945, 'sfx_standard.tmp')
+        pks_eo(ctx, 26394+86,   3150,  'sfx_mini.tmp')
+        pks_ii(ctx, 28753+77,   476,  0, 'strings_1')
+        pks_ii(ctx, 28941+49,   152,  0, 'strings_2')
 
     if ctx.file_id=='pkzipfix0.92':
         pks_ii(ctx, 6840+102, 974, 3, 'usage+terms')
