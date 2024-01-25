@@ -94,6 +94,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g-reg', 0xc2ecee66, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.06-IBM', 0xe2d25046, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50-reg', 0x294e9e9f, warn2=True)
 
@@ -107,6 +108,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g-reg', 0x5b8838d0, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.06-IBM', 0x6b882239, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50-reg', 0xc9d37588, warn2=True)
 
