@@ -540,6 +540,15 @@ def pkl_detect_and_decode_descrambler(ctx):
         pos_of_endpos_field = pos+20
         pos_of_jmp_field = pos+27
         op_pos = pos + 30
+    elif bseq_match(ctx, pos,
+        b'\x59\x2d\x20\x00\x8e\xd0\x51\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
+        b'\xfd\x90\x49\x74?\xad\x92\x33', 0x3f):
+        # Seen in XCOPY.EXE from PC DOS 6.3.
+        ctx.descrambler.segclass.set('1.50ibm')
+        ctx.pos_of_scrambled_word_count = pos+13
+        pos_of_endpos_field = pos+16
+        pos_of_jmp_field = pos + 24
+        op_pos = pos + 27
 
     found_params = ctx.descrambler.segclass.val_known
     if found_params:
