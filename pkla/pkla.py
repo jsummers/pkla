@@ -1163,7 +1163,9 @@ def pkl_fingerprint_COM(ctx):
         if ctx.copier.segclass.val=='COM-1.15like':
             ctx.createdby.set(prod+'1.15')
     if not ctx.createdby.val_known:
-        if ctx.intro.segclass.val=='COM-1.50like':
+        if ctx.intro.segclass.val=='COM-1.50like' and \
+            ctx.decompr.pos.val==142 and \
+            ctx.start_of_cmpr_data.val==464:
             if ctx.ver_reported.val==0x132:
                 ctx.createdby.set(prod+'1.50')
             elif ctx.ver_reported.val==0x201:
