@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2024.01.06+
+# Version 2024.03.15+
 # by Jason Summers
 #
-# A script to parse a PKLITE-compressed DOS EXE file, and
+# A script to parse a PKLITE-compressed DOS EXE or COM file, and
 # print compression parameters.
 #
 # Terms of use: MIT license. See COPYING.txt.
@@ -153,9 +153,13 @@ class context:
         ctx.psp_sig = pkla_string()
 
 def getbyte(ctx, offset):
+    if offset+1 >= len(ctx.blob):
+        raise Exception("Malformed file")
     return ctx.blob[offset]
 
 def getu16(ctx, offset):
+    if offset+2 >= len(ctx.blob):
+        raise Exception("Malformed file")
     val = ctx.blob[offset] + 256*ctx.blob[offset+1]
     return val
 
@@ -166,6 +170,8 @@ def gets16(ctx, offset):
     return val
 
 def putu16(ctx, val, offset):
+    if offset+2 >= len(ctx.blob):
+        raise Exception("Malformed file")
     ctx.blob[offset] = val % 256
     ctx.blob[offset+1] = val // 256
 
@@ -228,6 +234,8 @@ def find_bseq_exact(ctx, startpos, maxbytes, vals):
     pos = startpos
 
     while pos < startpos+maxbytes:
+        if pos+len(vals) > ctx.file_size.val:
+            return False, 0
 
         foundmatch = True
 
@@ -544,7 +552,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         b'\x59\x2d\x20\x00\x8e\xd0\x51\x2d??\x50\x52\xb9??\xbe??\x8b\xfe'
         b'\xfd\x90\x49\x74?\xad\x92\x33', 0x3f):
         # Seen in XCOPY.EXE from PC DOS 6.3.
-        ctx.descrambler.segclass.set('1.50ibm')
+        ctx.descrambler.segclass.set('1.50beta')
         ctx.pos_of_scrambled_word_count = pos+13
         pos_of_endpos_field = pos+16
         pos_of_jmp_field = pos + 24
