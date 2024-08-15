@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2024.03.15+
+# Version 2024.08.15+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE or COM file, and
@@ -385,8 +385,6 @@ def pkl_decode_intro_COM(ctx):
 # the position of the copier. This is usually right after the
 # "Not enough memory" message.
 def pkl_decode_intro(ctx):
-    pos = ctx.entrypoint.val
-
     if ctx.executable_fmt.val=='DOS COM':
         pkl_decode_intro_COM(ctx)
         return
@@ -394,17 +392,40 @@ def pkl_decode_intro(ctx):
     if ctx.is_exe.is_false_or_unk():
         return
 
+    isbeta1 = False
+    isbeta2 = False
+
+    pos = ctx.entrypoint.val
+
+    # Check for beta versions in advance, so we can exclude them
+    # from some preliminary tests.
+    if bseq_match(ctx, pos,
+        b'\x2e\x8c\x1e??\x8b\x1e??\x8c\xda??????\x72', 0x3f):
+        isbeta1 = True
+    elif bseq_match(ctx, pos,
+        b'\x2e\x8c\x1e??\xfc\x8c\xc8', 0x3f):
+        isbeta2 = True
+
+    # Some PKLITE-compressed files have been patched in a particular
+    # way, to run extra code before the decompression code takes over.
+    # This is done by modifying the entrypoint to point to some custom
+    # code near the end of the file. Here's where we try to handle that.
+    if ctx.entrypoint.val!=ctx.codestart.val and (not isbeta1) and \
+        (not isbeta2):
+        if bseq_match(ctx, ctx.codestart.val, b'\xb8??\xba', 0x3f):
+            pos = ctx.codestart.val
+        elif bseq_match(ctx, ctx.codestart.val, b'\x50\xb8??\xba', 0x3f):
+            pos = ctx.codestart.val
+
     if bseq_match(ctx, pos, b'\xb8??\xba', 0x3f):
         ctx.initial_DX.set(getu16(ctx, pos+4))
     elif bseq_match(ctx, pos, b'\x50\xb8??\xba', 0x3f):
         ctx.initial_DX.set(getu16(ctx, pos+5))
 
-    if bseq_match(ctx, pos,
-        b'\x2e\x8c\x1e??\x8b\x1e??\x8c\xda??????\x72', 0x3f):
+    if isbeta1:
         ctx.intro.segclass.set('beta')
         ctx.is_beta.set(True)
-    elif bseq_match(ctx, pos,
-        b'\x2e\x8c\x1e??\xfc\x8c\xc8', 0x3f):
+    elif isbeta2:
         ctx.intro.segclass.set("beta_lh")
         ctx.is_beta.set(True)
         ctx.load_high.set(True)
@@ -456,7 +477,9 @@ def pkl_decode_intro(ctx):
 
     if ctx.intro.segclass.val_known:
         ctx.is_pklite.set(True)
-        ctx.intro.pos.set(ctx.entrypoint.val)
+        ctx.intro.pos.set(pos)
+        if pos != ctx.entrypoint.val:
+            ctx.tags.append('patched to run extra code')
         if not ctx.is_beta.val_known:
             ctx.is_beta.set(False)
         if not ctx.load_high.val_known:
