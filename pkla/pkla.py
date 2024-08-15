@@ -153,12 +153,12 @@ class context:
         ctx.psp_sig = pkla_string()
 
 def getbyte(ctx, offset):
-    if offset+1 >= len(ctx.blob):
+    if offset+1 > len(ctx.blob):
         raise Exception("Malformed file")
     return ctx.blob[offset]
 
 def getu16(ctx, offset):
-    if offset+2 >= len(ctx.blob):
+    if offset+2 > len(ctx.blob):
         raise Exception("Malformed file")
     val = ctx.blob[offset] + 256*ctx.blob[offset+1]
     return val
