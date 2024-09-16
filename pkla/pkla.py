@@ -258,10 +258,13 @@ def pkl_open_file(ctx):
     ctx.file_size.set(len(ctx.blob))
 
 def is_win3x_pklite_format(ctx):
-    if not bseq_exact(ctx, 66, b'PKlite('):
-        return False
+    flag = False
+    if bseq_exact(ctx, 66, b'PKlite('):
+        flag = True
+    elif bseq_exact(ctx, 66, b'Pklite('):
+        flag = True
     # TODO: Better detection
-    return True
+    return flag
 
 def detect_pklite_com(ctx):
     # TODO: This is kind of redundant (see pkl_decode_intro_COM())
@@ -1130,7 +1133,7 @@ def pkl_fingerprint_extra(ctx):
             ctx.decompr.segclass.val=='common':
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+304,
                 b'\x3a\xef\x2c\x13\x2c\x0f\xf2\x63\x2c\x12\x2c\xed\xaa\xfc\x4b\x38'):
-                ctx.createdby.set('ZIP2EXE 2.50 registered')
+                ctx.createdby.set('ZIP2EXE/DOS 2.50 registered')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.50' and \
             ctx.is_scrambled.is_true() and \
@@ -1183,8 +1186,15 @@ def pkl_fingerprint_v120(ctx):
             ctx.copier_subclass.val=='1.20var1small+7' and \
             ctx.decompr.segclass.val=='v120small':
             if bseq_exact(ctx, ctx.start_of_cmpr_data.val+314,
+                b'\xa3\xf3\x2c\x4f\x2c\x56\xab\x80\xb7\x97\x33\xd7\xbb\xd3\x33\x0c'):
+                # From PKZIP 2.50 for Windows (GUI) (1996) (pk250w16.exe)
+                # thru at least 2.70
+                ctx.createdby.set('PKZIP/Windows 2.50+')
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+314,
                 b'\x44\x43\xad\xb7\x9d\xb4\xfb\x0e\xa8\x23\xee\x4e\xa8\x97\xa8\x22'):
-                ctx.createdby.set('ZIP2EXE 2.50 shareware')
+                # From PKZIP 2.50 for DOS (1999) (pk250dos.exe)
+                ctx.createdby.set('ZIP2EXE/DOS 2.50 shareware')
+
     if not ctx.createdby.val_known:
         ctx.createdby.set('PKLITE - private PKWARE version')
 
