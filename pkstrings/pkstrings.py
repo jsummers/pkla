@@ -81,6 +81,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg', 0xad5aa1cf)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g-regv2', 0xa451d121)
+    pks_add_new_knownfile(ctx, 'pksfx2.49', 0x94fdb73c)
     pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554)
     pks_add_new_knownfile(ctx, 'zipsfx2.50-reg', 0xf6690492)
 
@@ -216,6 +217,14 @@ def pks_init_items(ctx):
         pks_ii(ctx, 16647+58,  629, 4, 'usage')
         pks_ii(ctx, 17651+81,  686, 0, 'strings_1')
         pks_ii(ctx, 17852+78,  152, 0, 'strings_2')
+
+    if ctx.file_id=='pksfx2.49':
+        pks_ii(ctx, 17451+1, 300, 4, 'reg_info')
+        pks_ii(ctx, 17550+77,  173, 4, 'intro')
+        pks_ii(ctx, 18221+48, 641, 4, 'terms')
+        pks_ii(ctx, 18898+1, 629, 4, 'usage')
+        pks_ii(ctx, 19594+90, 686, 0, 'strings_1')
+        pks_ii(ctx, 19811+25, 152, 0, 'strings_2')
 
     if ctx.file_id=='zipsfx2.50':
         pks_ii(ctx, 17074+76,  606, 4, 'reg_info')
