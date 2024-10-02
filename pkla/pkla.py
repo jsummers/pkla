@@ -138,6 +138,7 @@ class context:
         ctx.pos_of_last_scrambled_word = 0
         ctx.scrambled_section_startpos = pkla_number()
         ctx.scramble_algorithm = pkla_number()
+        ctx.poly_descrambler = pkla_bool()
 
         ctx.is_beta = pkla_bool()
         ctx.load_high = pkla_bool()
@@ -506,6 +507,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     pos_of_endpos_field = 0
     pos_of_jmp_field = 0
     pos = ctx.position2.val
+    ctx.poly_descrambler.set(False)
 
     op_pos = 0
     if bseq_match(ctx, pos,
@@ -537,6 +539,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         b'\x41\x01\xc3\x75\xe6\x52\xb8??\xbe??\x56\x56\x52\x50\x90'
         b'???????\x74???????\x33', 0x3f):
         ctx.descrambler.segclass.set('1.50')
+        ctx.poly_descrambler.set(True)
         ctx.pos_of_scrambled_word_count = pos+20
         pos_of_endpos_field = pos+23
         pos_of_jmp_field = pos + 38
@@ -563,6 +566,7 @@ def pkl_detect_and_decode_descrambler(ctx):
         # code files from this era use in the descrambler doesn't help
         # matters.
         ctx.descrambler.segclass.set('pklite2.01like')
+        ctx.poly_descrambler.val_known = False
         ctx.pos_of_scrambled_word_count = pos+21
         pos_of_endpos_field = pos+24
         pos_of_jmp_field = pos+35
@@ -570,6 +574,7 @@ def pkl_detect_and_decode_descrambler(ctx):
     elif bseq_match(ctx, pos,
         b'\x8b\xfc\x81?????????????\xbb??\xbe??????\x74???\x03', 0x3f):
         ctx.descrambler.segclass.set('chk4lite2.01like')
+        ctx.poly_descrambler.val_known = False
         ctx.pos_of_scrambled_word_count = pos+17
         pos_of_endpos_field = pos+20
         pos_of_jmp_field = pos+27
@@ -1365,6 +1370,8 @@ def report_pklite_specific(ctx):
             s = '?'
         print(ctx.p_INFO+' scramble algorithm:', s)
         print(ctx.p_INFO+' initial key:', ctx.initial_key.getpr_hex())
+        print(ctx.p_INFO+' descrambler has polymorphic code:', \
+            ctx.poly_descrambler.getpr_yesno())
         print(ctx.p_INFO+' scrambled section start:', ctx.scrambled_section_startpos.getpr_withrel(ctx))
         if ctx.is_scrambled.is_true() or ctx.scrambled_word_count>0:
             print(ctx.p_INFO+' num scrambled bytes:', ctx.scrambled_word_count*2)
