@@ -79,8 +79,10 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zipsfx2.04e', 0x72b5183a)
     pks_add_new_knownfile(ctx, 'zipsfx2.04e-reg', 0x6a2aad04)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g', 0xfae98b00)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04g-swmkt', 0xc720b5aa)
     pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg', 0xad5aa1cf)
-    pks_add_new_knownfile(ctx, 'zipsfx2.04g-regv2', 0xa451d121)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04g-reg-swmkt', 0xa451d121)
+    pks_add_new_knownfile(ctx, 'zipsfx2.04-reg-french', 0xcb59c47f, warn2=True)
     pks_add_new_knownfile(ctx, 'pksfx2.49', 0x94fdb73c)
     pks_add_new_knownfile(ctx, 'zipsfx2.50', 0x50b92554)
     pks_add_new_knownfile(ctx, 'zipsfx2.50-reg', 0xf6690492)
@@ -94,7 +96,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04g-swmkt', 0x8dd06dfa, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g-reg', 0xc2ecee66, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04-reg-french', 0xd24d95bc, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.06-IBM', 0xe2d25046, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50-reg', 0x294e9e9f, warn2=True)
@@ -108,7 +112,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04g-swmkt', 0xe2d89fba, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g-reg', 0x5b8838d0, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04-reg-french', 0x68e57e0c, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.06-IBM', 0x6b882239, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50-reg', 0xc9d37588, warn2=True)
@@ -121,8 +127,11 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d)
     pks_add_new_knownfile(ctx, 'zip2exe2.04c', 0x1b4f68ed)
     pks_add_new_knownfile(ctx, 'zip2exe2.04e', 0x4e6cba6b)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04e-reg', 0xc3cc0a87, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g', 0xcda32810)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04g-swmkt', 0xb03af9d1, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g-reg', 0x77fb9baf)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04-reg-french', 0x65a04c4a, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe2.50', 0xec9b2d59)
     pks_add_new_knownfile(ctx, 'zip2exe2.50-reg', 0x2f201f50)
 
@@ -136,9 +145,11 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzipfix2.04e', 0x97a12502)
     pks_add_new_knownfile(ctx, 'pkzipfix2.04g', 0xd466fb3b)
     # (There is no unique pkzipfix2.04g-reg.)
+    pks_add_new_knownfile(ctx, 'pkzipfix2.04-reg-french', 0xe699e392, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzipfix2.50', 0x816fdbf0)
     # (There is no unique pkzipfix2.50-reg.)
 
+    pks_add_new_knownfile(ctx, 'putav2.04e-reg', 0xa9d0ba3d, warn2=True)
     pks_add_new_knownfile(ctx, 'putav2.04g-reg', 0x0c68b6ff, warn2=True)
 
 # (pks_add_new_item)
@@ -201,6 +212,15 @@ def pks_init_items(ctx):
         pks_ii(ctx, 18236-128, 686, 0, 'strings_1')
         pks_ii(ctx, 18434-128, 152, 0, 'strings_2')
 
+    # "Shareware Marketing" edition
+    if ctx.file_id=='zipsfx2.04g-swmkt':
+        pks_ii(ctx, 16067+7,   650, 4, 'reg_info')
+        pks_ii(ctx, 16192+57,  173, 4, 'intro')
+        pks_ii(ctx, 16844+36,  630, 4, 'terms')
+        pks_ii(ctx, 17508+3,   629, 4, 'usage')
+        pks_ii(ctx, 18233+51,  686, 0, 'strings_1')
+        pks_ii(ctx, 18421+61,  152, 0, 'strings_2')
+
     if ctx.file_id=='zipsfx2.04g-reg' or ctx.file_id=='zipsfx2.04e-reg':
         pks_ii(ctx, 15331+112, 227, 4, 'reg_info')
         pks_ii(ctx, 15595+24,  175, 4, 'intro')
@@ -210,7 +230,7 @@ def pks_init_items(ctx):
         pks_ii(ctx, 17907+39,  152, 0, 'strings_2')
 
     # "Shareware Marketing" edition
-    if ctx.file_id=='zipsfx2.04g-regv2':
+    if ctx.file_id=='zipsfx2.04g-reg-swmkt':
         pks_ii(ctx, 15320+101, 237, 4, 'reg_info')
         pks_ii(ctx, 15535+62,  175, 4, 'intro')
         pks_ii(ctx, 16009+66,  477, 4, 'terms')
