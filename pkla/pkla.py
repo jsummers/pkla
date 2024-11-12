@@ -1176,6 +1176,11 @@ def pkl_fingerprint_v120(ctx):
                 b'\xb3\xc9\x59\x9a\x64\x47\x85\x66\x70\xce\xdc\x00\x00\xdf\x80\x46'):
                 ctx.createdby.set('ZIP2EXE 2.04g shareware')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\x7c\x4d\xff\x68\x5f\x2c\x0f\x00\x00\x70\x5f\x29\x7d\xa9\x6e\x5d'):
+                ctx.createdby.set('ZIP2EXE 2.04g shareware (Shareware Marketing)')
+                # https://archive.org/details/shareware-universe-the-gold-collection
+                #  -> BUSINESS/PKZIP/PKZIP.ZIP
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
                 b'\xed\xf8\xb0\xa0\x5c\xf8\xb8\x28\x5c\xdc\x41\x00\x00\x80\x6c\xad'):
                 ctx.createdby.set('ZIP2EXE 2.04g registered')
             elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
@@ -1184,6 +1189,9 @@ def pkl_fingerprint_v120(ctx):
                 # E.g.:
                 # https://archive.org/details/So_Much_Shareware_5_CD-ROM_Power_User_Software_1995
                 #  -> FINANCE/FTTLV500.ZIP -> HJS.EXE
+            elif bseq_exact(ctx, ctx.start_of_cmpr_data.val+12402,
+                b'\xf2\x92\x86\x6a\x2a\x3e\x69\x60\xd1\x50\x06\x00\x11\xee\xbc\x5c'):
+                ctx.createdby.set('ZIP2EXE 2.04 registered (French)')
 
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='1.14' and \
