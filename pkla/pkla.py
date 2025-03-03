@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2024.08.15+
+# Version 2025.03.03+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE or COM file, and
@@ -383,6 +383,23 @@ def pkl_decode_intro_COM(ctx):
         ctx.is_beta.set(True)
         ctx.position2.set(follow_1byte_jmp(ctx, pos+18))
         ctx.errorhandler.pos.set(pos+26)
+
+def pkl_check_for_notpklite_exe(ctx):
+    # Special detection for PKTINY format, because it has a fake
+    # "PKLITE" copyright string.
+    pos = ctx.entrypoint.val
+    is_pktiny = False
+
+    if bseq_match(ctx, pos,
+        b'\x1e\x0e\x1f\xb8\xf0\xff\x8e\xc0\x26\x8a\x1e\x0e', 0x3f):
+        is_pktiny = True
+    elif bseq_match(ctx, pos,
+        b'\x2e\xc6\x06\x00\x00\xe9\x2e\xc6\x06\x01\x00\x1d', 0x3f):
+        is_pktiny = True
+
+    if is_pktiny:
+        ctx.errmsg = "Not a PKLITE-compressed file. It's probably " \
+        "PKTINY-compressed."
 
 # Decode the first part of the executable code, and
 # find "position2": the position of the descrambler, or, if not scrambled,
@@ -1520,6 +1537,8 @@ def main():
         pkl_read_main(ctx)
     if ctx.errmsg=='':
         pkl_decode_overlay(ctx)
+    if ctx.errmsg=='':
+        pkl_check_for_notpklite_exe(ctx)
     if ctx.errmsg=='':
         pkl_decode_intro(ctx)
     if ctx.errmsg=='':
