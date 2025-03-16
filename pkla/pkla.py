@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2025.03.03+
+# Version 2025.03.16+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE or COM file, and
@@ -1085,7 +1085,11 @@ def pkl_fingerprint_100_to_105(ctx):
 
         if not ctx.createdby.val_known:
             if ctx.ver_reported.val==0x100:
-                ctx.createdby.set(prod+'1.00')
+                x = getbyte(ctx, ctx.copier.pos.val+23)
+                if x==0x4c:
+                    ctx.createdby.set(prod+'1.00beta900717')
+                else:
+                    ctx.createdby.set(prod+'1.00')
             elif ctx.ver_reported.val==0x103:
                 ctx.createdby.set(prod+'1.03')
 
@@ -1232,10 +1236,10 @@ def pkl_fingerprint_beta(ctx):
     dsize = ctx.codeend.val - ctx.entrypoint.val
     if ctx.large_compression.val:
         if dsize==648 or dsize==545: # 545 = loadhigh
-            ctx.createdby.set('PKLITE 1.00beta')
+            ctx.createdby.set('PKLITE 1.00beta900529')
     else:
         if dsize==468 or dsize==371: # 371 = loadhigh
-            ctx.createdby.set('PKLITE 1.00beta')
+            ctx.createdby.set('PKLITE 1.00beta900529')
 
 def pkl_fingerprint_COM(ctx):
     prod = 'PKLITE '
@@ -1275,7 +1279,7 @@ def pkl_fingerprint_COM(ctx):
                     ctx.createdby.set(prod+'1.05-1.14')
     if not ctx.createdby.val_known:
         if ctx.intro.segclass.val=='COM-beta':
-            ctx.createdby.set(prod+'1.00beta')
+            ctx.createdby.set(prod+'1.00beta900529')
 
 def pkl_fingerprint(ctx):
     if not ctx.v120_compression.val_known:
