@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkstrings.py
-# Version 2024.??.??
+# Version 2025.03.16+
 # by Jason Summers
 #
 # A script to decode text strings in some PKWARE executable files
@@ -94,7 +94,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip1.10', 0xbd3c0723)
     pks_add_new_knownfile(ctx, 'pkzip1.10-export', 0x16788efe)
     pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04c-reg', 0xb2c339bf, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04e-reg', 0x84cc47aa, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g-swmkt', 0x8dd06dfa, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g-reg', 0xc2ecee66, warn2=True)
@@ -110,7 +112,9 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip1.10', 0x8a352fe4)
     pks_add_new_knownfile(ctx, 'pkunzip1.10-export', 0x4f000d45)
     pks_add_new_knownfile(ctx, 'pkunzip2.04c', 0x50280eea, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04c-reg', 0x5d9698f3, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04e', 0xb886fbb4, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04e-reg', 0xc9935d06, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g-swmkt', 0xe2d89fba, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g-reg', 0x5b8838d0, warn2=True)
@@ -126,6 +130,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a)
     pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d)
     pks_add_new_knownfile(ctx, 'zip2exe2.04c', 0x1b4f68ed)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04c-reg', 0xed7c8433, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe2.04e', 0x4e6cba6b)
     pks_add_new_knownfile(ctx, 'zip2exe2.04e-reg', 0xc3cc0a87, warn2=True)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g', 0xcda32810)
@@ -149,6 +154,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzipfix2.50', 0x816fdbf0)
     # (There is no unique pkzipfix2.50-reg.)
 
+    pks_add_new_knownfile(ctx, 'putav2.04c-reg', 0x3aa17e83, warn2=True)
     pks_add_new_knownfile(ctx, 'putav2.04e-reg', 0xa9d0ba3d, warn2=True)
     pks_add_new_knownfile(ctx, 'putav2.04g-reg', 0x0c68b6ff, warn2=True)
 
