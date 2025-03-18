@@ -130,13 +130,13 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'zip2exe1.10', 0xb4c5611a)
     pks_add_new_knownfile(ctx, 'zip2exe1.10-export', 0x1fcda67d)
     pks_add_new_knownfile(ctx, 'zip2exe2.04c', 0x1b4f68ed)
-    pks_add_new_knownfile(ctx, 'zip2exe2.04c-reg', 0xed7c8433, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04c-reg', 0xed7c8433)
     pks_add_new_knownfile(ctx, 'zip2exe2.04e', 0x4e6cba6b)
-    pks_add_new_knownfile(ctx, 'zip2exe2.04e-reg', 0xc3cc0a87, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04e-reg', 0xc3cc0a87)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g', 0xcda32810)
-    pks_add_new_knownfile(ctx, 'zip2exe2.04g-swmkt', 0xb03af9d1, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04g-swmkt', 0xb03af9d1)
     pks_add_new_knownfile(ctx, 'zip2exe2.04g-reg', 0x77fb9baf)
-    pks_add_new_knownfile(ctx, 'zip2exe2.04-reg-french', 0x65a04c4a, warn2=True)
+    pks_add_new_knownfile(ctx, 'zip2exe2.04-reg-french', 0x65a04c4a)
     pks_add_new_knownfile(ctx, 'zip2exe2.50', 0xec9b2d59)
     pks_add_new_knownfile(ctx, 'zip2exe2.50-reg', 0x2f201f50)
 
@@ -455,6 +455,14 @@ def pks_init_items(ctx):
         pks_ii(ctx, 24848+82,  476, 0, 'strings_1')
         pks_ii(ctx, 25145+109, 152, 0, 'strings_2')
 
+    if ctx.file_id=='zip2exe2.04c-reg':
+        pks_ii(ctx, 5089+12,   141, 4, 'intro')
+        pks_ii(ctx, 5878+8,    784, 4, 'usage+terms')
+        pks_eo(ctx, 20910+120, 15142, 'sfx_standard.tmp')
+        pks_eo(ctx, 23970+62,  3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 24439+69,  476, 0, 'strings_1')
+        pks_ii(ctx, 24702+138, 152, 0, 'strings_2')
+
     if ctx.file_id=='zip2exe2.04e':
         pks_ii(ctx, 23825+75,  140, 4, 'intro')
         pks_ii(ctx, 24657+31,  786, 4, 'usage+terms')
@@ -462,6 +470,14 @@ def pks_init_items(ctx):
         pks_eo(ctx, 23828-80,  3002,  'sfx_mini.tmp')
         pks_ii(ctx, 25154+12,  476, 0, 'strings_1')
         pks_ii(ctx, 25389+101, 152, 0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.04e-reg':
+        pks_ii(ctx, 5087+30,   141, 4, 'intro')
+        pks_ii(ctx, 5865+39,   786, 4, 'usage+terms')
+        pks_eo(ctx, 21236+32,  15348, 'sfx_standard.tmp')
+        pks_eo(ctx, 24194+76,  3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 24746+2,   476, 0, 'strings_1')
+        pks_ii(ctx, 24986+94,  152, 0, 'strings_2')
 
     if ctx.file_id=='zip2exe2.04g':
         pks_ii(ctx, 5033+83,   140, 4, 'intro')
@@ -471,6 +487,14 @@ def pks_init_items(ctx):
         pks_ii(ctx, 25097+55,  476, 0, 'strings_1')
         pks_ii(ctx, 25369+107, 152, 0, 'strings_2')
 
+    if ctx.file_id=='zip2exe2.04g-swmkt':
+        pks_ii(ctx, 5017+99,   140, 4, 'intro')
+        pks_ii(ctx, 5897+5,    784, 4, 'usage+terms')
+        pks_eo(ctx, 21758+133, 15987, 'sfx_standard.tmp')
+        pks_eo(ctx, 24849+45,  3002,  'sfx_mini.tmp')
+        pks_ii(ctx, 25356+14,  476, 0, 'strings_1')
+        pks_ii(ctx, 25645+49,  152, 0, 'strings_2')
+
     if ctx.file_id=='zip2exe2.04g-reg':
         pks_ii(ctx, 5087+30,   141,  4, 'intro')
         pks_ii(ctx, 5863+39,   784,  4, 'usage+terms')
@@ -478,6 +502,14 @@ def pks_init_items(ctx):
         pks_eo(ctx, 24143+113, 3002,  'sfx_mini.tmp')
         pks_ii(ctx, 24723+9,   476,  0, 'strings_1')
         pks_ii(ctx, 25009+55,  152,  0, 'strings_2')
+
+    if ctx.file_id=='zip2exe2.04-reg-french':
+        pks_ii(ctx, 5051+69,   144, 4, 'intro')
+        pks_ii(ctx, 5950+19,   847, 4, 'usage+terms')
+        pks_eo(ctx, 22194+70,  16280, 'sfx_standard.tmp')
+        pks_eo(ctx, 25198+74,  3008,  'sfx_mini.tmp')
+        pks_ii(ctx, 25720+92,  532, 0, 'strings_1')
+        pks_ii(ctx, 26059+125, 192, 0, 'strings_2')
 
     if ctx.file_id=='zip2exe2.50':
         pks_ii(ctx, 26435+11,   142, 4, 'intro')
