@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkstrings.py
-# Version 2025.03.16+
+# Version 2025.03.19+
 # by Jason Summers
 #
 # A script to decode text strings in some PKWARE executable files
@@ -157,6 +157,11 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'putav2.04c-reg', 0x3aa17e83, warn2=True)
     pks_add_new_knownfile(ctx, 'putav2.04e-reg', 0xa9d0ba3d, warn2=True)
     pks_add_new_knownfile(ctx, 'putav2.04g-reg', 0x0c68b6ff, warn2=True)
+
+    pks_add_new_knownfile(ctx, 'pkcfg2.04c-reg', 0x88c81c55)
+    pks_add_new_knownfile(ctx, 'pkcfg2.04e-reg', 0xe4eff6c2)
+    pks_add_new_knownfile(ctx, 'pkcfg2.04g-reg', 0x1b4feb35)
+    pks_add_new_knownfile(ctx, 'pkcfg2.04-reg-french', 0x47409232)
 
 # (pks_add_new_item)
 def pks_ii(ctx, endpos, ilen, bshift, id):
@@ -568,6 +573,18 @@ def pks_init_items(ctx):
         pks_ii(ctx, 9356+32,  1058, 4, 'usage+terms')
         pks_ii(ctx, 9534+65,  189,  0, 'strings_1')
         pks_ii(ctx, 9731+21,  152,  0, 'strings_2')
+
+    if ctx.file_id=='pkcfg2.04c-reg':
+        pks_ii(ctx, 26034+19, 3297, 0, 'strings_1')
+
+    if ctx.file_id=='pkcfg2.04e-reg':
+        pks_ii(ctx, 26269+39, 3330, 0, 'strings_1')
+
+    if ctx.file_id=='pkcfg2.04g-reg':
+        pks_ii(ctx, 26303+7,  3330, 0, 'strings_1')
+
+    if ctx.file_id=='pkcfg2.04-reg-french':
+        pks_ii(ctx, 27270+56, 3702, 0, 'strings_1')
 
 # Read the header and the code image into memory.
 def pks_read_main2(ctx, inf):
