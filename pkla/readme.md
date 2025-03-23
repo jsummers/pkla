@@ -40,11 +40,13 @@ Professional version of PKLITE v1.14 and higher.
 
 -----
 
-TODO:
-* More documentation.
-* Better names for some of the segment "classes".
-* Better support for beta-version files.
+Pkla does not support decompression, and I never anticipated that it
+would do so.
 
-Not planned:
-* Decompression, or any feature that would require it.
-* Support for PKLITE[32]-compressed Windows executables.
+Unfortunately, as far as I know, it is not possible to find the
+compressed relocation table, or in some cases the "footer" segment that
+follows it, without decompressing the compressed data (or at least going
+through the motions of it). It would certainly be nice if Pkla could
+report the locations of these items. So I'm not taking it off the table.
+Some form of decompression ability might be added to a future version,
+though it's not currently planned.
