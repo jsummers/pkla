@@ -50,3 +50,9 @@ through the motions of it). It would certainly be nice if Pkla could
 report the locations of these items. So I'm not taking it off the table.
 Some form of decompression ability might be added to a future version,
 though it's not currently planned.
+
+-----
+
+For what it's worth, I've also written a script to analyze
+EXEPACK-compressed files. Look for "Exepacka" in my
+[miscjs](https://github.com/jsummers/miscjs) repository.
