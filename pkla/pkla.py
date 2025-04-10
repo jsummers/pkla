@@ -140,7 +140,7 @@ class context:
         ctx.scramble_algorithm = pkla_number()
         ctx.poly_descrambler = pkla_bool()
 
-        ctx.is_beta = pkla_bool()
+        ctx.beta_exe_structure = pkla_bool()
         ctx.load_high = pkla_bool()
         ctx.large_compression = pkla_bool()
         ctx.extra_compression = pkla_bool()
@@ -368,19 +368,16 @@ def pkl_decode_intro_COM(ctx):
         ctx.intro.segclass.set('COM-1.00like')
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+9))
         ctx.position2.set(pos+10)
-        ctx.is_beta.set(False)
         ctx.load_high.set(False)
     elif bseq_match(ctx, pos,
         b'\x50\xb8??\xba??\x3b\xc4\x73', 0x3f):
         ctx.intro.segclass.set('COM-1.50like')
         ctx.errorhandler.pos.set(follow_1byte_jmp(ctx, pos+10))
         ctx.position2.set(pos+11)
-        ctx.is_beta.set(False)
         ctx.load_high.set(False)
     elif bseq_match(ctx, pos,
         b'\xba??\xa1\x02\x00\x2d??\x8c\xcb??????\x77', 0x3f):
         ctx.intro.segclass.set('COM-beta')
-        ctx.is_beta.set(True)
         ctx.position2.set(follow_1byte_jmp(ctx, pos+18))
         ctx.errorhandler.pos.set(pos+26)
 
@@ -418,7 +415,7 @@ def pkl_decode_intro(ctx):
 
     pos = ctx.entrypoint.val
 
-    # Check for beta versions in advance, so we can exclude them
+    # Check for beta structure files in advance, so we can exclude them
     # from some preliminary tests.
     if bseq_match(ctx, pos,
         b'\x2e\x8c\x1e??\x8b\x1e??\x8c\xda??????\x72', 0x3f):
@@ -445,10 +442,10 @@ def pkl_decode_intro(ctx):
 
     if isbeta1:
         ctx.intro.segclass.set('beta')
-        ctx.is_beta.set(True)
+        ctx.beta_exe_structure.set(True)
     elif isbeta2:
         ctx.intro.segclass.set("beta_lh")
-        ctx.is_beta.set(True)
+        ctx.beta_exe_structure.set(True)
         ctx.load_high.set(True)
     elif bseq_match(ctx, pos,
         b'\xb8??\xba??\x8c\xdb\x03\xd8\x3b\x1e\x02\x00\x73', 0x3f):
@@ -501,8 +498,8 @@ def pkl_decode_intro(ctx):
         ctx.intro.pos.set(pos)
         if pos != ctx.entrypoint.val:
             ctx.tags.append('patched to run extra code')
-        if not ctx.is_beta.val_known:
-            ctx.is_beta.set(False)
+        if not ctx.beta_exe_structure.val_known:
+            ctx.beta_exe_structure.set(False)
         if not ctx.load_high.val_known:
             ctx.load_high.set(False)
 
@@ -510,7 +507,7 @@ def pkl_decode_intro(ctx):
 # If so, figure out the scrambling params.
 def pkl_detect_and_decode_descrambler(ctx):
 
-    if ctx.is_beta.is_true():
+    if ctx.beta_exe_structure.is_true():
         ctx.is_scrambled.set(False)
         return
 
@@ -793,7 +790,7 @@ def pkl_decode_decompr_COM(ctx):
 def pkl_decode_decompr(ctx):
     if not ctx.decompr.pos.val_known:
         # A hack, until we decide where the "copier" starts for this format.
-        if ctx.is_exe.val and ctx.is_beta.val:
+        if ctx.is_exe.val and ctx.beta_exe_structure.val:
             if bseq_match(ctx, ctx.entrypoint.val+0x59,
                 b'\xf3\xa5\x2e\xa1????????\xcb\xfc', 0x3f):
                 # small
@@ -841,16 +838,17 @@ def pkl_decode_decompr(ctx):
         b'\xfc\x8c\xc8\x2e\x2b\x06??\x8e\xd8\xbf', 0x3f):
         ctx.decompr.segclass.set('beta')
     else:
-        if ctx.is_beta.is_false_or_unk():
+        if ctx.beta_exe_structure.is_false_or_unk():
             ctx.errmsg = "Can't decode decompressor"
         return
 
 def pkl_deduce_settings1(ctx):
-    if (not ctx.start_of_cmpr_data.val_known) and ctx.is_beta.is_true() and \
+    if (not ctx.start_of_cmpr_data.val_known) and \
+        ctx.beta_exe_structure.is_true() and \
         ctx.is_exe.val:
         ctx.start_of_cmpr_data.set(ctx.codestart.val)
 
-    if ctx.is_beta.is_true() and ctx.is_exe.val:
+    if ctx.beta_exe_structure.is_true() and ctx.is_exe.val:
         ctx.approx_end_of_decompressor.set(ctx.codeend.val)
     elif ctx.start_of_cmpr_data.val_known:
         ctx.approx_end_of_decompressor.set(ctx.start_of_cmpr_data.val)
@@ -868,11 +866,11 @@ def pkl_scan_decompr1(ctx):
     if not ctx.approx_end_of_decompressor.val_known:
         return
     if ctx.decompr.pos.val_known:
-        if ctx.is_beta.is_true():
+        if ctx.beta_exe_structure.is_true():
             startpos = ctx.decompr.pos.val
         else:
             startpos = ctx.decompr.pos.val+94
-    elif ctx.is_beta.is_true() and ctx.codestart.val_known:
+    elif ctx.beta_exe_structure.is_true() and ctx.codestart.val_known:
         # Kind of a hack. For some beta files, I don't know how to find the best
         # place to search from.
         startpos = ctx.codestart.val
@@ -1300,7 +1298,7 @@ def pkl_fingerprint(ctx):
     if ctx.extra_compression.is_true():
         pkl_fingerprint_extra(ctx)
         return
-    if ctx.is_beta.is_true():
+    if ctx.beta_exe_structure.is_true():
         pkl_fingerprint_beta(ctx)
         return
 
@@ -1380,7 +1378,8 @@ def report_pklite_specific(ctx):
 
     print(ctx.p_INFO+'intro pos:', ctx.intro.pos.getpr_withrel(ctx))
     print(ctx.p_INFO+'intro class:', ctx.intro.segclass.val)
-    print(ctx.p_INFO+'beta:', ctx.is_beta.getpr_yesno())
+    if ctx.is_exe.is_true():
+        print(ctx.p_INFO+'beta EXE structure:', ctx.beta_exe_structure.getpr_yesno())
     print(ctx.p_LOW+'load-high:', ctx.load_high.getpr_yesno())
 
     print(ctx.p_INFO+'descrambler/copier pos:', ctx.position2.getpr_withrel(ctx))
