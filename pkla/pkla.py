@@ -1057,6 +1057,11 @@ def check_fake_v120(ctx):
     if bseq_exact(ctx, 30, b'PKLITE Copr. 1990-92 PKWARE'):
         ctx.tags.append('fake v1.20')
 
+def pkl_check_zip2exe111(ctx):
+    if bseq_exact(ctx, ctx.start_of_cmpr_data.val+10272,
+        b'\x6b\x22\xb1\x4a\x40\x4c\x00\x05\x30\x43\x47\x4e\x49\x45\x59\x4c'):
+        ctx.createdby.set('ZIP2EXE 1.11-IBM')
+
 def pkl_fingerprint_100_to_105(ctx):
     if ctx.intro.segclass.val=='1.00' and \
         ctx.copier_subclass.val=='common+23' and \
@@ -1088,6 +1093,7 @@ def pkl_fingerprint_100_to_105(ctx):
                     ctx.createdby.set(prod+'1.00beta900717')
                 else:
                     ctx.createdby.set(prod+'1.00')
+                    pkl_check_zip2exe111(ctx)
             elif ctx.ver_reported.val==0x103:
                 ctx.createdby.set(prod+'1.03')
 
