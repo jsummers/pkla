@@ -18,7 +18,7 @@ patterns, if there are too many format variants to enumerate.
 
 -----
 
-The "-p" option causes each output item to be tagged with an indication
+The `-p` option causes each output item to be tagged with an indication
 of its importance with respect to decompressing the file. The following
 tags are used:
 
@@ -33,12 +33,18 @@ the importance in the particular file being analyzed.
 
 -----
 
-The "-s" option creates a modified version of the input file, with a
+The `-s` option creates a modified version of the input file, with a
 certain "scrambled" section of it descrambled. This makes the file
 easier to analyze. This applies mainly to files created with the
 Professional version of PKLITE v1.14 and higher.
 
 -----
+
+If you want to decompress a PKLITE-compressed file, on a modern
+computer, I humbly suggest my [Deark](https://entropymine.com/deark/)
+utility, with the `-m pklite` option. On a DOS computer, I suggest UNP
+or DISLITE, though they don't work with some very late-era PKLITE
+files.
 
 Pkla does not support decompression, and I never anticipated that it
 would do so.
