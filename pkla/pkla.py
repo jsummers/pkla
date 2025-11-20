@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2025.03.16+
+# Version 2025.11.20+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE or COM file, and
@@ -100,6 +100,7 @@ class context:
         ctx.is_pklite = pkla_bool()
         # "DOS EXE" "Win3 EXE" "DOS COM"
         ctx.executable_fmt = pkla_string()
+        ctx.exe2bin = False
 
         ctx.file_size = pkla_number()
         ctx.entrypoint = pkla_number()
@@ -277,8 +278,18 @@ def detect_pklite_com(ctx):
         ctx.ver_info_pos = 46 # 1.50-2.01
     elif bseq_match(ctx, 0, b'\xba??\xa1??\x2d\x20', 0x3f):
         ctx.ver_info_pos = 36 # beta
+    elif bseq_match(ctx, 0, b'\xb8??\xba??\x8c\xdb\x03\xd8\x3b\x1e\x02\x00\x73', 0x3f):
+        ctx.exe2bin = True
 
     if ctx.ver_info_pos>0:
+        return True
+    if ctx.exe2bin:
+        ctx.createdby.set('PKLITE 1.00-1.05')
+        ctx.tags.append('converted from EXE by EXE2BIN')
+        ctx.intro.pos.set(0)
+        ctx.intro.segclass.set("1.00")
+        # TODO? We could decode this, but it's very rare.
+        ctx.errmsg = "This modified format is not fully supported";
         return True
     return False
 
