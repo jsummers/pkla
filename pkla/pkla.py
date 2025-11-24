@@ -107,6 +107,8 @@ class context:
         ctx.ver_info = pkla_number()
         ctx.ver_reported = pkla_number()
         ctx.ip = 0
+        ctx.reloc_tbl_start = 0
+        ctx.num_relocs = 0
         ctx.reloc_tbl_end = 0
         ctx.codestart = pkla_number()
         ctx.codeend = pkla_number()
@@ -297,7 +299,7 @@ def pkl_read_exe(ctx):
     e_cblp = getu16(ctx, 2)
     e_cp = getu16(ctx, 4)
 
-    num_relocs = getu16(ctx, 6)
+    ctx.num_relocs = getu16(ctx, 6)
     e_cparhdr = getu16(ctx, 8)
     ctx.codestart.set(e_cparhdr*16)
 
@@ -310,8 +312,8 @@ def pkl_read_exe(ctx):
     cs = gets16(ctx, 22)
     ctx.entrypoint.set(ctx.codestart.val + 16*cs + ctx.ip)
 
-    reloc_tbl_start = getu16(ctx, 24)
-    ctx.reloc_tbl_end = reloc_tbl_start + 4*num_relocs
+    ctx.reloc_tbl_start = getu16(ctx, 24)
+    ctx.reloc_tbl_end = ctx.reloc_tbl_start + 4*ctx.num_relocs
 
     if is_win3x_pklite_format(ctx):
         ctx.executable_fmt.set('Win3 EXE')
@@ -335,6 +337,19 @@ def pkl_read_exe(ctx):
     if ctx.overlay_size.val > 0:
         ctx.overlay.pos.set(ctx.codeend.val)
 
+def pkl_exe_has_ver_info(ctx):
+    if ctx.ver_info_pos==0:
+        return False
+    if ctx.ver_info_pos!=28:
+        return True
+    # If the reloc table overlaps where ver_info should be,
+    # then we don't have a valid ver_info.
+    if ctx.num_relocs==0:
+        return True
+    if ctx.reloc_tbl_start<30 and ctx.reloc_tbl_end>28:
+        return False
+    return True
+
 # Determine the file format, and read non-PKLITE-specific data
 def pkl_read_main(ctx):
     ctx.is_pklite.set(False) # Default
@@ -352,7 +367,7 @@ def pkl_read_main(ctx):
         ctx.errmsg = "Not a supported file format"
         return
 
-    if ctx.ver_info_pos>0:
+    if pkl_exe_has_ver_info(ctx):
         ctx.ver_info.set(getu16(ctx, ctx.ver_info_pos))
         ctx.ver_reported.set(ctx.ver_info.val & 0x0fff)
 
