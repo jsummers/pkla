@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkla.py
-# Version 2025.11.20+
+# Version 2026.04.14+
 # by Jason Summers
 #
 # A script to parse a PKLITE-compressed DOS EXE or COM file, and
@@ -155,6 +155,7 @@ class context:
         ctx.checksum_calc = pkla_number()
         ctx.has_psp_sig = pkla_bool()
         ctx.psp_sig = pkla_string()
+        ctx.possible_filesize_bug = False
 
 def getbyte(ctx, offset):
     if offset+1 > len(ctx.blob):
@@ -1044,6 +1045,8 @@ def pkl_look_for_orighdrcopy(ctx):
     n = getu16(ctx, ctx.orighdrcopy_pos.val)
     if n>511:
         return
+    if n==0:
+        ctx.possible_filesize_bug = True
 
     # Number of 512-byte blocks
     n = getu16(ctx, ctx.orighdrcopy_pos.val+2)
@@ -1262,14 +1265,27 @@ def pkl_fingerprint_v120(ctx):
     if not ctx.createdby.val_known:
         ctx.createdby.set('PKLITE - private PKWARE version')
 
+def pkl_check_filesize_bug(ctx):
+    if not ctx.possible_filesize_bug:
+        return
+    if ctx.has_orighdrcopy.is_false_or_unk():
+        return
+    if not ctx.overlay_size.val_known:
+        return
+    if ctx.overlay_size.val < 512:
+        return
+    ctx.tags.append('likely has beta-filesize-bug')
+
 def pkl_fingerprint_beta(ctx):
     dsize = ctx.codeend.val - ctx.entrypoint.val
     if ctx.large_compression.val:
         if dsize==648 or dsize==545: # 545 = loadhigh
             ctx.createdby.set('PKLITE 1.00beta900529')
+            pkl_check_filesize_bug(ctx)
     else:
         if dsize==468 or dsize==371: # 371 = loadhigh
             ctx.createdby.set('PKLITE 1.00beta900529')
+            pkl_check_filesize_bug(ctx)
 
 def pkl_fingerprint_COM(ctx):
     prod = 'PKLITE '
