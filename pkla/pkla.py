@@ -1161,14 +1161,18 @@ def pkl_fingerprint_extra(ctx):
             ctx.copier_subclass.val=='common+20':
             if ctx.large_compression.val:
                 x = getbyte(ctx, ctx.decompr.pos.val+257)
-                if x==0xfa:
+                if x==0xfa and ctx.ver_reported.val==0x10b:
+                    ctx.createdby.set(prod+'1.11')
+                elif x==0xfa:
                     ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
                     ctx.createdby.set(prod+'1.13')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+223)
-                if x==0xfa:
+                if x==0xfa and ctx.ver_reported.val==0x10b:
+                    ctx.createdby.set(prod+'1.11')
+                elif x==0xfa:
                     ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
@@ -1288,7 +1292,11 @@ def pkl_fingerprint_beta(ctx):
             pkl_check_filesize_bug(ctx)
 
 def pkl_fingerprint_COM(ctx):
-    prod = 'PKLITE '
+    if ctx.ver_reported.val==0x10b:
+        prod = 'PKLITE (Professional?) '
+    else:
+        prod = 'PKLITE '
+
     if not ctx.createdby.val_known:
         if ctx.copier.segclass.val=='COM-1.15like':
             ctx.createdby.set(prod+'1.15')
@@ -1315,6 +1323,8 @@ def pkl_fingerprint_COM(ctx):
             elif x==0x1c:
                 if ctx.ver_reported.val==0x105:
                     ctx.createdby.set(prod+'1.05')
+                elif ctx.ver_reported.val==0x10b:
+                    ctx.createdby.set(prod+'1.11')
                 elif ctx.ver_reported.val==0x10c:
                     ctx.createdby.set(prod+'1.12')
                 elif ctx.ver_reported.val==0x10d:
@@ -1350,7 +1360,14 @@ def pkl_fingerprint(ctx):
         pkl_fingerprint_beta(ctx)
         return
 
-    prod = 'PKLITE '
+    if ctx.ver_reported.val==0x10b:
+        # Best guess is that there was no shareware v1.11. But
+        # there was a Professional v1.11, so all 1.11 files must
+        # have been made by the Professional version.
+        prod = 'PKLITE (Professional?) '
+    else:
+        prod = 'PKLITE '
+
     if not ctx.createdby.val_known:
         pkl_fingerprint_100_to_105(ctx)
     if not ctx.createdby.val_known:
@@ -1358,14 +1375,18 @@ def pkl_fingerprint(ctx):
             ctx.copier_subclass.val=='common+20':
             if ctx.large_compression.val:
                 x = getbyte(ctx, ctx.decompr.pos.val+254)
-                if x==0xfa:
+                if x==0xfa and ctx.ver_reported.val==0x10b:
+                    ctx.createdby.set(prod+'1.11')
+                elif x==0xfa:
                     ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
                     ctx.createdby.set(prod+'1.13')
             else:
                 x = getbyte(ctx, ctx.decompr.pos.val+220)
-                if x==0xfa:
+                if x==0xfa and ctx.ver_reported.val==0x10b:
+                    ctx.createdby.set(prod+'1.11')
+                elif x==0xfa:
                     ctx.createdby.set(prod+'1.12')
                     check_fake_v120(ctx)
                 elif x==0x1e:
