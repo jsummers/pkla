@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # pkstrings.py
-# Version 2025.03.19+
+# Version 2026.10.14+
 # by Jason Summers
 #
 # A script to decode text strings in some PKWARE executable files
@@ -96,11 +96,12 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkzip2.04c', 0x60788bda, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04c-reg', 0xb2c339bf, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04e', 0x75ea90e7, warn1=True)
-    pks_add_new_knownfile(ctx, 'pkzip2.04e-reg', 0x84cc47aa, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04e-reg', 0x84cc47aa, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.04g', 0x42b0cb79, warn1=True)
-    pks_add_new_knownfile(ctx, 'pkzip2.04g-swmkt', 0x8dd06dfa, warn2=True)
-    pks_add_new_knownfile(ctx, 'pkzip2.04g-reg', 0xc2ecee66, warn2=True)
-    pks_add_new_knownfile(ctx, 'pkzip2.04-reg-french', 0xd24d95bc, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04g-swmkt', 0x8dd06dfa, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04g-reg', 0xc2ecee66, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04g-reg-swmkt', 0xc4d2985b, warn1=True)
+    pks_add_new_knownfile(ctx, 'pkzip2.04-reg-french', 0xd24d95bc, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.06-IBM', 0xe2d25046, warn2=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50', 0x3a199e25, warn1=True)
     pks_add_new_knownfile(ctx, 'pkzip2.50-reg', 0x294e9e9f, warn2=True)
@@ -118,6 +119,7 @@ def pks_init_knownfiles(ctx):
     pks_add_new_knownfile(ctx, 'pkunzip2.04g', 0xb724c756, warn1=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g-swmkt', 0xe2d89fba, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04g-reg', 0x5b8838d0, warn2=True)
+    pks_add_new_knownfile(ctx, 'pkunzip2.04g-reg-swmkt', 0x7877c6dd, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.04-reg-french', 0x68e57e0c, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.06-IBM', 0x6b882239, warn2=True)
     pks_add_new_knownfile(ctx, 'pkunzip2.50', 0xfb9a09f3, warn1=True)
@@ -331,10 +333,35 @@ def pks_init_items(ctx):
         pks_ii(ctx, 54941+89, 152,  0, 'strings_2')
         pks_ii(ctx, 55771+73, 814,  0, 'strings_3')
 
+    if ctx.file_id=='pkzip2.04e-reg':
+        pks_ii(ctx, 54479+30, 1707, 0, 'strings_1')
+        pks_ii(ctx, 55671+89, 152,  0, 'strings_2')
+        pks_ii(ctx, 56517+57, 814,  0, 'strings_3')
+
     if ctx.file_id=='pkzip2.04g':
         pks_ii(ctx, 53268+47, 1707, 0, 'strings_1')
         pks_ii(ctx, 54523+35, 152,  0, 'strings_2')
         pks_ii(ctx, 55368+4,  814,  0, 'strings_3')
+
+    if ctx.file_id=='pkzip2.04g-swmkt':
+        pks_ii(ctx, 53534+5,   1707, 0, 'strings_1')
+        pks_ii(ctx, 54671+111, 152,  0, 'strings_2')
+        pks_ii(ctx, 55519+77,  814,  0, 'strings_3')
+
+    if ctx.file_id=='pkzip2.04g-reg':
+        pks_ii(ctx, 54007+22, 1707, 0, 'strings_1')
+        pks_ii(ctx, 55232+40, 152,  0, 'strings_2')
+        pks_ii(ctx, 56031+55, 814,  0, 'strings_3')
+
+    if ctx.file_id=='pkzip2.04g-reg-swmkt':
+        pks_ii(ctx, 54027+50, 1707, 0, 'strings_1')
+        pks_ii(ctx, 55252+68, 152,  0, 'strings_2')
+        pks_ii(ctx, 56092+42, 814,  0, 'strings_3')
+
+    if ctx.file_id=='pkzip2.04-reg-french':
+        pks_ii(ctx, 55150+65, 1997, 0, 'strings_1')
+        pks_ii(ctx, 55676+36, 192,  0, 'strings_2')
+        pks_ii(ctx, 56562+36, 886,  0, 'strings_3')
 
     if ctx.file_id=='pkzip2.50':
         pks_ii(ctx, 64659+46, 2043, 0, 'strings_1')
